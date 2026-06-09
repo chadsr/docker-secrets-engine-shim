@@ -10,10 +10,10 @@ BINS := secrets-engine-daemon docker-pass
 all: $(BINS)
 
 secrets-engine-daemon:
-	go build $(LDFLAGS) -o $@ ./cmd/$@
+	go build $(LDFLAGS) -o dist/$@ ./cmd/$@
 
 docker-pass:
-	go build $(LDFLAGS) -o $@ ./cmd/$@
+	go build $(LDFLAGS) -o dist/$@ ./cmd/$@
 
 clean:
 	rm -f $(BINS)
