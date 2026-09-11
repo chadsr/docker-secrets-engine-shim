@@ -1,6 +1,9 @@
 package daemon
 
 import (
+	"io"
+	"net/http"
+	"sync"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -10,6 +13,29 @@ import (
 	pluginsv1 "github.com/docker/secrets-engine/x/api/plugins/v1"
 	"github.com/docker/secrets-engine/x/secrets"
 )
+
+type nopConn struct{ io.ReadWriteCloser }
+
+func TestRegistrationService_RegisterPlugin_consumes_pending_client(t *testing.T) {
+	registry := NewRegistry()
+	pending := map[io.ReadWriteCloser]*http.Client{}
+	svc := &RegistrationService{
+		Registry:       registry,
+		pendingClients: &sync.Mutex{},
+		pending:        pending,
+	}
+
+	client := &http.Client{}
+	pending[nopConn{}] = client
+
+	_, err := svc.RegisterPlugin(t.Context(), connect.NewRequest(registerReq("test-plugin", "v1.0.0", "**")))
+	require.NoError(t, err)
+
+	assert.Empty(t, pending, "pending client should be consumed on registration")
+	plugins := registry.List()
+	require.Len(t, plugins, 1)
+	assert.Equal(t, client, plugins[0].Client)
+}
 
 func TestRegistrationService_RegisterPlugin(t *testing.T) {
 	registry := NewRegistry()

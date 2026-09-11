@@ -24,7 +24,8 @@ func NewRegistry() *Registry {
 	}
 }
 
-func (r *Registry) Register(name string, pattern secrets.Pattern, client *http.Client) error {
+// Register stores the plugin, replacing any previous entry under the same name so a reconnecting plugin gets its new client.
+func (r *Registry) Register(name string, pattern secrets.Pattern, client *http.Client) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.plugins[name] = PluginEntry{
@@ -32,22 +33,6 @@ func (r *Registry) Register(name string, pattern secrets.Pattern, client *http.C
 		Pattern: pattern,
 		Client:  client,
 	}
-	return nil
-}
-
-func (r *Registry) Lookup(id string) (PluginEntry, bool) {
-	r.mu.RLock()
-	defer r.mu.RUnlock()
-	for _, p := range r.plugins {
-		parsedID, err := secrets.ParseID(id)
-		if err != nil {
-			continue
-		}
-		if p.Pattern.Match(parsedID) {
-			return p, true
-		}
-	}
-	return PluginEntry{}, false
 }
 
 func (r *Registry) FindForPattern(pattern secrets.Pattern) (PluginEntry, bool) {

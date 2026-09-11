@@ -13,53 +13,36 @@ func TestRegistry_Register(t *testing.T) {
 	r := NewRegistry()
 	pattern := secrets.MustParsePattern("**")
 
-	err := r.Register("test-plugin", pattern, &http.Client{})
-	require.NoError(t, err)
+	r.Register("test-plugin", pattern, &http.Client{})
 
 	plugins := r.List()
-	assert.Len(t, plugins, 1)
+	require.Len(t, plugins, 1)
 	assert.Equal(t, "test-plugin", plugins[0].Name)
 }
 
-func TestRegistry_Register_duplicate(t *testing.T) {
+func TestRegistry_Register_duplicate_replaces_client(t *testing.T) {
 	r := NewRegistry()
 	pattern := secrets.MustParsePattern("**")
 
-	err := r.Register("test-plugin", pattern, &http.Client{})
-	require.NoError(t, err)
+	r.Register("test-plugin", pattern, &http.Client{})
 
 	newClient := &http.Client{}
-	err = r.Register("test-plugin", pattern, newClient)
-	assert.NoError(t, err)
+	r.Register("test-plugin", pattern, newClient)
 
-	entry, ok := r.Lookup("anything")
-	require.True(t, ok)
-	assert.Equal(t, newClient, entry.Client)
+	plugins := r.List()
+	require.Len(t, plugins, 1)
+	assert.Equal(t, newClient, plugins[0].Client)
 }
 
-func TestRegistry_Lookup(t *testing.T) {
+func TestRegistry_FindForPattern(t *testing.T) {
 	r := NewRegistry()
-	pattern := secrets.MustParsePattern("docker/**")
 
-	err := r.Register("my-plugin", pattern, &http.Client{})
-	require.NoError(t, err)
+	r.Register("my-plugin", secrets.MustParsePattern("docker/**"), &http.Client{})
 
-	entry, ok := r.Lookup("docker/auth/token")
+	entry, ok := r.FindForPattern(secrets.MustParsePattern("docker/auth/token"))
 	assert.True(t, ok)
 	assert.Equal(t, "my-plugin", entry.Name)
 
-	_, ok = r.Lookup("other/thing")
+	_, ok = r.FindForPattern(secrets.MustParsePattern("other/thing"))
 	assert.False(t, ok)
-}
-
-func TestRegistry_Lookup_wildcard(t *testing.T) {
-	r := NewRegistry()
-	pattern := secrets.MustParsePattern("**")
-
-	err := r.Register("catch-all", pattern, &http.Client{})
-	require.NoError(t, err)
-
-	entry, ok := r.Lookup("anything/at/all")
-	assert.True(t, ok)
-	assert.Equal(t, "catch-all", entry.Name)
 }

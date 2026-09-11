@@ -76,6 +76,9 @@ func NewServer(socketPath, engineName, version, commitHash, date string) *Server
 
 		<-ctx.Done()
 		closer.Close()
+		s.pendingMu.Lock()
+		delete(s.pending, conn)
+		s.pendingMu.Unlock()
 	})
 	mux.Handle(hijackPath, hijackHandler)
 
@@ -107,5 +110,12 @@ func (s *Server) Mux() http.Handler {
 func (s *Server) RegisterPluginClient(conn io.ReadWriteCloser, client *http.Client) {
 	s.pendingMu.Lock()
 	s.pending[conn] = client
+	s.pendingMu.Unlock()
+}
+
+// RemovePluginClient drops a pending client added by RegisterPluginClient.
+func (s *Server) RemovePluginClient(conn io.ReadWriteCloser) {
+	s.pendingMu.Lock()
+	delete(s.pending, conn)
 	s.pendingMu.Unlock()
 }

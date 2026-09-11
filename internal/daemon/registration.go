@@ -41,16 +41,15 @@ func (s *RegistrationService) RegisterPlugin(_ context.Context, req *connect.Req
 	var client *http.Client
 	if s.pendingClients != nil && s.pending != nil {
 		s.pendingClients.Lock()
-		for _, c := range s.pending {
+		for conn, c := range s.pending {
 			client = c
+			delete(s.pending, conn)
 			break
 		}
 		s.pendingClients.Unlock()
 	}
 
-	if err := s.Registry.Register(name, pattern, client); err != nil {
-		return nil, connect.NewError(connect.CodeAlreadyExists, err)
-	}
+	s.Registry.Register(name, pattern, client)
 
 	resp := &pluginsv1.RegisterPluginResponse{}
 	resp.SetEngineName(s.EngineName)
