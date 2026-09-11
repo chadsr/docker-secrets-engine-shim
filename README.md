@@ -1,5 +1,8 @@
 # docker-secrets-engine-shim
 
+[![CI](https://github.com/chadsr/docker-secrets-engine-shim/actions/workflows/ci.yml/badge.svg)](https://github.com/chadsr/docker-secrets-engine-shim/actions/workflows/ci.yml)
+[![Dependabot Updates](https://github.com/chadsr/docker-secrets-engine-shim/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/chadsr/docker-secrets-engine-shim/actions/workflows/dependabot/dependabot-updates)
+
 Docker's [secrets engine](https://github.com/docker/secrets-engine) resolves
 `se://` references to real values when a container starts, keeping secret
 literals out of Compose files, `.env` files, and shell history. On Linux it
