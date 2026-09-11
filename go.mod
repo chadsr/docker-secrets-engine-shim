@@ -3,7 +3,7 @@ module github.com/user/secrets-engine-shim
 go 1.25.12
 
 require (
-	connectrpc.com/connect v1.20.0
+	connectrpc.com/connect v1.21.0
 	github.com/containerd/nri v0.12.0
 	github.com/docker/cli v29.6.2+incompatible
 	github.com/docker/docker-credential-helpers v0.9.8
