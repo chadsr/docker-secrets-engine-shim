@@ -3,7 +3,8 @@
 [![CI](https://github.com/chadsr/docker-secrets-engine-shim/actions/workflows/ci.yml/badge.svg)](https://github.com/chadsr/docker-secrets-engine-shim/actions/workflows/ci.yml)
 [![Dependabot Updates](https://github.com/chadsr/docker-secrets-engine-shim/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/chadsr/docker-secrets-engine-shim/actions/workflows/dependabot/dependabot-updates)
 
-Docker's [secrets engine](https://github.com/docker/secrets-engine) resolves `se://` references to real values when a container starts, keeping secret literals out of Compose files, `.env` files, and shell history. On Linux it only ships as a proprietary, prebuilt binary. The public repo contains just the SDK.
+Docker's [secrets engine](https://github.com/docker/secrets-engine) resolves `se://` references to real values when a container starts, keeping secret literals out of Compose files, `.env` files, and shell history.
+Docker only releases `secrets-engine` as a proprietary, prebuilt binary, so this shim was created as an un-official open-source alternative which shims to the official [docker-credential-helpers](https://github.com/docker/docker-credential-helpers); providing the same base `secrets-engine` features via those instead.
 
 This shim is a thin, from-source replacement built on that SDK. It behaves the same from the outside but stores secrets through the standard Docker credential helpers you may already have, so no proprietary binary or separate secret store is needed.
 
@@ -61,7 +62,7 @@ docker mcp secret set apikey=sk-...                                # mcp-gateway
 
 ## Security
 
-The daemon only accepts connections from your own user and root. Secrets share the credential helper store with `docker login` registry credentials: only use `se://` references you control.
+The daemon only accepts connections from your own user and root. Secrets share the credential helper store with `docker login` registry credentials: only use `se://` references you control. When a secret cannot be resolved, container creation fails, matching the official engine.
 
 ## Differences from the official engine
 
