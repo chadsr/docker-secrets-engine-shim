@@ -12,8 +12,7 @@ import (
 	"github.com/user/secrets-engine-shim/internal/daemon"
 )
 
-// The plugin child process is this test binary re-exec'd: TestMain branches
-// into plugin mode instead of running the tests again.
+// The plugin child is this test binary re-exec'd; TestMain branches into plugin mode.
 const testPluginChild = "SHIM_TEST_PLUGIN_CHILD"
 
 func TestMain(m *testing.M) {
@@ -24,10 +23,7 @@ func TestMain(m *testing.M) {
 	os.Exit(m.Run())
 }
 
-// Exercises the full launch handshake against the real SDK: fd-passed
-// socketpair, PluginConfigFromEngine encoding, plugin registration, and the
-// yamux-backed client stored in the registry. This is the wiring an SDK
-// upgrade can silently break while unit tests stay green.
+// Exercises the launch wiring an SDK upgrade can silently break: fd passing, PluginConfigFromEngine, yamux registration.
 func TestStartPluginHandshake(t *testing.T) {
 	socketPath := filepath.Join(t.TempDir(), "test.sock")
 	srv := daemon.NewServer(socketPath, engineName, version, commit, date)

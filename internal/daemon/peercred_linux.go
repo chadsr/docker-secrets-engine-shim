@@ -10,8 +10,7 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// allowedPeerUID reports whether a connection from uid peer is accepted:
-// the daemon owner's own uid, or root (uid 0) for dockerd's NRI plugin.
+// allowedPeerUID accepts the daemon owner's uid and root (dockerd's NRI plugin).
 func allowedPeerUID(peer, owner uint32) bool {
 	return peer == owner || peer == 0
 }
@@ -22,10 +21,7 @@ type peerCredListener struct {
 	logf  func(format string, args ...any)
 }
 
-// NewPeerCredListener gates a unix listener by peer credentials: connections
-// from uids other than the daemon owner's (or root) are closed before any
-// HTTP traffic is served. Abstract sockets carry no filesystem permissions,
-// so this is the only access control on them.
+// NewPeerCredListener rejects connections from other uids; abstract sockets carry no permissions, so this is their only access control.
 func NewPeerCredListener(l net.Listener) net.Listener {
 	return &peerCredListener{
 		Listener: l,

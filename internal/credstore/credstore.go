@@ -46,8 +46,7 @@ func idToServerURL(id store.ID) string {
 	return id.String()
 }
 
-// trimRegistryLabel strips the "Registry credentials for " prefix that
-// docker-credential-secretservice adds to list keys.
+// trimRegistryLabel strips the "Registry credentials for " prefix that secretservice adds to list keys.
 func trimRegistryLabel(serverURL string) string {
 	return strings.TrimPrefix(serverURL, "Registry credentials for ")
 }

@@ -25,11 +25,9 @@ func runDaemon() {
 
 	srv := daemon.NewServer(abstractSock, engineName, version, commit, date)
 
-	// The abstract socket (@docker-secrets-engine/<uid>/daemon.sock) is used
-	// by the NRI plugin and the SDK default. The filesystem socket
-	// (~/.cache/docker-secrets-engine/engine.sock) is used by mcp-gateway and
-	// `docker pass run`. A filesystem symlink can't point to an abstract
-	// socket, so we serve the same handler on both.
+	// The abstract socket is used by the NRI plugin and the SDK default,
+	// the filesystem socket by mcp-gateway and `docker pass run`. A
+	// symlink can't point to an abstract socket, so we serve both.
 	os.MkdirAll(filepath.Dir(fsSock), 0o700)
 	os.Remove(fsSock)
 	fsListener, err := net.Listen("unix", fsSock)
@@ -67,8 +65,7 @@ func runDaemon() {
 	}
 }
 
-// startPlugin spawns the docker-pass plugin as a subprocess of this binary
-// (builtin, like the official engine — no docker CLI plugin discovery).
+// startPlugin spawns this binary as the docker-pass plugin subprocess.
 func startPlugin(logger logging.Logger, srv *daemon.Server) error {
 	self, err := os.Executable()
 	if err != nil {

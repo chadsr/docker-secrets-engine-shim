@@ -39,9 +39,7 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
-// newTestStore returns a store backed by the fake helper binary, invoked by
-// absolute path — no PATH or DOCKER_CONFIG involvement. Tests must not run
-// in parallel: FAKE_HELPER_STATE is how the helper finds its per-test state.
+// newTestStore backs a store with the fake helper via absolute path; not parallel-safe (FAKE_HELPER_STATE is shared).
 func newTestStore(t *testing.T) store.Store {
 	t.Helper()
 	stateFile := filepath.Join(t.TempDir(), "state.json")

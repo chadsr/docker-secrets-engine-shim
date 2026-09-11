@@ -45,8 +45,7 @@ func TestDaemonSocketPath(t *testing.T) {
 	assert.Equal(t, "@docker-secrets-engine/1000/daemon.sock", daemonSocketPath(1000))
 }
 
-// Guards the hardcoded NRI dial path against upstream scheme changes: if
-// the SDK default drifts, daemon and NRI plugin would silently desync.
+// Guards the NRI dial path against SDK socket-scheme drift: a mismatch would silently desync daemon and plugin.
 func TestDaemonSocketPathMatchesSDK(t *testing.T) {
 	assert.Equal(t, seapi.DaemonSocketPath(), daemonSocketPath(os.Getuid()))
 }

@@ -32,7 +32,7 @@ func runDockerPass() {
 			SchemaVersion:    "0.1.0",
 			Vendor:           engineName,
 			Version:          version,
-			ShortDescription: "Secrets engine shim — manage local secrets",
+			ShortDescription: "Manage your local secrets",
 		})
 		return
 	}

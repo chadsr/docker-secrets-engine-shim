@@ -8,8 +8,7 @@
 //	/usr/libexec/docker/nri-plugins/10-secrets-engine → ../../../bin/docker-secrets-engine-shim
 //
 // The docker-pass and 10-secrets-engine symlink names match upstream so
-// Docker's CLI plugin discovery and dockerd's NRI config matching work
-// unchanged. Only the ELF itself (docker-secrets-engine-shim) is renamed.
+// Docker's plugin discovery and dockerd's NRI config matching work unchanged.
 package main
 
 import (
