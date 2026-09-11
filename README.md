@@ -4,9 +4,8 @@
 [![Dependabot Updates](https://github.com/chadsr/docker-secrets-engine-shim/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/chadsr/docker-secrets-engine-shim/actions/workflows/dependabot/dependabot-updates)
 
 Docker's [secrets engine](https://github.com/docker/secrets-engine) resolves `se://` references to real values when a container starts, keeping secret literals out of Compose files, `.env` files, and shell history.
-Docker only releases `secrets-engine` as a proprietary, prebuilt binary, so this shim was created as an un-official open-source alternative which shims to the official [docker-credential-helpers](https://github.com/docker/docker-credential-helpers); providing the same base `secrets-engine` features via those instead.
 
-This shim is a thin, from-source replacement built on that SDK. It behaves the same from the outside but stores secrets through the standard Docker credential helpers you may already have, so no proprietary binary or separate secret store is needed.
+Docker only releases `secrets-engine` as a proprietary, prebuilt binary, so this shim was created as an un-official open-source alternative which shims to the official [docker-credential-helpers](https://github.com/docker/docker-credential-helpers); providing the same base `secrets-engine` features via those instead.
 
 ## What you get
 
