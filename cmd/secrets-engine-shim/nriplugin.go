@@ -13,6 +13,7 @@ import (
 	"github.com/sirupsen/logrus"
 
 	seclient "github.com/docker/secrets-engine/client"
+	"github.com/docker/secrets-engine/x/secrets"
 )
 
 const (
@@ -62,8 +63,7 @@ func (p *nriPlugin) CreateContainer(ctx context.Context, _ *api.PodSandbox, ctr 
 
 		resolved, err := p.resolve(ctx, name)
 		if err != nil {
-			logrus.Warnf("container %s: %v", ctr.GetName(), err)
-			continue
+			return nil, nil, fmt.Errorf("container %s: %w", ctr.GetName(), err)
 		}
 
 		adjustment.RemoveEnv(key)
@@ -88,7 +88,7 @@ func (p *nriPlugin) resolve(ctx context.Context, name string) (string, error) {
 	}
 
 	if len(envelopes) == 0 {
-		return "", fmt.Errorf("se://%s: not found", name)
+		return "", fmt.Errorf("se://%s: %w", name, secrets.ErrNotFound)
 	}
 	if len(envelopes) > 1 {
 		return "", fmt.Errorf("se://%s: matched %d secrets", name, len(envelopes))

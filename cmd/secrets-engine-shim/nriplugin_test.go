@@ -115,7 +115,7 @@ func TestResolve(t *testing.T) {
 	t.Run("no match", func(t *testing.T) {
 		p := &nriPlugin{client: staticClient(nil, nil)}
 		_, err := p.resolve(t.Context(), "db/pass")
-		assert.ErrorContains(t, err, "not found")
+		assert.ErrorIs(t, err, secrets.ErrNotFound)
 	})
 
 	t.Run("ambiguous match", func(t *testing.T) {
@@ -198,9 +198,9 @@ func TestCreateContainer(t *testing.T) {
 		assert.Empty(t, adj.Env)
 	})
 
-	t.Run("resolution error keeps literal env", func(t *testing.T) {
-		p := &nriPlugin{client: resolvingClient(nil)}
-		adj := create(t, p, []string{"TOKEN=se://missing"})
-		assert.Empty(t, adj.Env)
+	t.Run("resolution error fails container creation", func(t *testing.T) {
+		p := &nriPlugin{client: staticClient(nil, nil)}
+		_, _, err := p.CreateContainer(t.Context(), nil, &api.Container{Name: "test", Env: []string{"TOKEN=se://missing"}})
+		assert.ErrorIs(t, err, secrets.ErrNotFound)
 	})
 }
