@@ -1,14 +1,5 @@
-// Command docker-secrets-engine-shim is a multicall binary: the same ELF acts
-// as the daemon, the docker-pass CLI plugin, and the dockerd NRI plugin,
-// dispatching on argv[0] (basename of the invoked path). Install symlinks:
-//
-//	/usr/bin/docker-secrets-engine-shim                              (the ELF)
-//	/usr/bin/docker-pass                → docker-secrets-engine-shim
-//	/usr/lib/docker/cli-plugins/docker-pass → ../../bin/docker-secrets-engine-shim
-//	/usr/libexec/docker/nri-plugins/10-secrets-engine → ../../../bin/docker-secrets-engine-shim
-//
-// The docker-pass and 10-secrets-engine symlink names match upstream so
-// Docker's plugin discovery and dockerd's NRI config matching work unchanged.
+// Command docker-secrets-engine-shim is a multicall binary.
+// The same ELF acts as the daemon, the docker-pass CLI plugin, and the dockerd NRI plugin.
 package main
 
 import (
