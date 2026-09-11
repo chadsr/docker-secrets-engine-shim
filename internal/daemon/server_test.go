@@ -13,17 +13,19 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	resolverv1 "github.com/docker/secrets-engine/x/api/resolver/v1"
-	resolverv1connect "github.com/docker/secrets-engine/x/api/resolver/v1/resolverv1connect"
 	healthv1 "github.com/docker/secrets-engine/x/api/health/v1"
 	healthv1connect "github.com/docker/secrets-engine/x/api/health/v1/healthv1connect"
+	pluginsv1 "github.com/docker/secrets-engine/x/api/plugins/v1"
+	pluginsv1connect "github.com/docker/secrets-engine/x/api/plugins/v1/pluginsv1connect"
+	resolverv1 "github.com/docker/secrets-engine/x/api/resolver/v1"
+	resolverv1connect "github.com/docker/secrets-engine/x/api/resolver/v1/resolverv1connect"
 	"github.com/docker/secrets-engine/x/ipc"
 	"github.com/docker/secrets-engine/x/testhelper"
 )
 
 func TestServer_healthcheck(t *testing.T) {
 	socketPath := filepath.Join(t.TempDir(), "test.sock")
-	srv := NewServer(socketPath, "v0.1.0", "abc123", "2026-06-03")
+	srv := NewServer(socketPath, "test-engine", "v0.1.0", "abc123", "2026-06-03")
 	go srv.ListenAndServe()
 	t.Cleanup(func() { srv.Close() })
 	waitForSocket(t, socketPath)
@@ -37,7 +39,7 @@ func TestServer_healthcheck(t *testing.T) {
 
 func TestServer_version(t *testing.T) {
 	socketPath := filepath.Join(t.TempDir(), "test.sock")
-	srv := NewServer(socketPath, "v0.1.0", "abc123", "2026-06-03")
+	srv := NewServer(socketPath, "test-engine", "v0.1.0", "abc123", "2026-06-03")
 	go srv.ListenAndServe()
 	t.Cleanup(func() { srv.Close() })
 	waitForSocket(t, socketPath)
@@ -51,7 +53,7 @@ func TestServer_version(t *testing.T) {
 
 func TestServer_plugin_hijack_and_register(t *testing.T) {
 	socketPath := filepath.Join(t.TempDir(), "test.sock")
-	srv := NewServer(socketPath, "v0.1.0", "abc123", "2026-06-03")
+	srv := NewServer(socketPath, "test-engine", "v0.1.0", "abc123", "2026-06-03")
 	go srv.ListenAndServe()
 	t.Cleanup(func() { srv.Close() })
 	waitForSocket(t, socketPath)
@@ -74,14 +76,16 @@ func TestServer_plugin_hijack_and_register(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(func() { pluginIPC.Close() })
 
-	regClient := resolverv1connect.NewRegisterServiceClient(pluginClient, "http://unix")
-	regReq := &resolverv1.RegisterPluginRequest{}
+	regClient := pluginsv1connect.NewRegisterServiceClient(pluginClient, "http://unix")
+	regReq := &pluginsv1.RegisterPluginRequest{}
 	regReq.SetName("docker-pass")
 	regReq.SetVersion("v0.1.0")
-	regReq.SetPattern("**")
+	sp := &pluginsv1.SecretsProvider{}
+	sp.SetPattern("**")
+	regReq.SetSecretsProvider(sp)
 	regResp, err := regClient.RegisterPlugin(t.Context(), connect.NewRequest(regReq))
 	require.NoError(t, err)
-	assert.Equal(t, "secrets-engine-shim", regResp.Msg.GetEngineName())
+	assert.Equal(t, "test-engine", regResp.Msg.GetEngineName())
 
 	plugins := srv.Registry.List()
 	require.Len(t, plugins, 1)
@@ -91,7 +95,7 @@ func TestServer_plugin_hijack_and_register(t *testing.T) {
 
 func TestServer_resolve_secret_through_plugin(t *testing.T) {
 	socketPath := filepath.Join(t.TempDir(), "test.sock")
-	srv := NewServer(socketPath, "v0.1.0", "abc123", "2026-06-03")
+	srv := NewServer(socketPath, "test-engine", "v0.1.0", "abc123", "2026-06-03")
 	go srv.ListenAndServe()
 	t.Cleanup(func() { srv.Close() })
 	waitForSocket(t, socketPath)
@@ -114,11 +118,13 @@ func TestServer_resolve_secret_through_plugin(t *testing.T) {
 	require.NoError(t, err)
 	t.Cleanup(func() { pluginIPC.Close() })
 
-	regClient := resolverv1connect.NewRegisterServiceClient(pluginClient, "http://unix")
-	regReq := &resolverv1.RegisterPluginRequest{}
+	regClient := pluginsv1connect.NewRegisterServiceClient(pluginClient, "http://unix")
+	regReq := &pluginsv1.RegisterPluginRequest{}
 	regReq.SetName("docker-pass")
 	regReq.SetVersion("v0.1.0")
-	regReq.SetPattern("**")
+	sp := &pluginsv1.SecretsProvider{}
+	sp.SetPattern("**")
+	regReq.SetSecretsProvider(sp)
 	_, err = regClient.RegisterPlugin(t.Context(), connect.NewRequest(regReq))
 	require.NoError(t, err)
 

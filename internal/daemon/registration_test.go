@@ -7,23 +7,20 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	resolverv1 "github.com/docker/secrets-engine/x/api/resolver/v1"
+	pluginsv1 "github.com/docker/secrets-engine/x/api/plugins/v1"
 	"github.com/docker/secrets-engine/x/secrets"
 )
 
 func TestRegistrationService_RegisterPlugin(t *testing.T) {
 	registry := NewRegistry()
-	svc := &RegistrationService{Registry: registry}
+	svc := &RegistrationService{Registry: registry, EngineName: "test-engine", Version: "test-v0.1.0"}
 
-	req := &resolverv1.RegisterPluginRequest{}
-	req.SetName("test-plugin")
-	req.SetVersion("v1.0.0")
-	req.SetPattern("**")
+	req := registerReq("test-plugin", "v1.0.0", "**")
 
 	resp, err := svc.RegisterPlugin(t.Context(), connect.NewRequest(req))
 	require.NoError(t, err)
-	assert.Equal(t, "secrets-engine-shim", resp.Msg.GetEngineName())
-	assert.Equal(t, "v0.1.0", resp.Msg.GetEngineVersion())
+	assert.Equal(t, "test-engine", resp.Msg.GetEngineName())
+	assert.Equal(t, "test-v0.1.0", resp.Msg.GetEngineVersion())
 
 	plugins := registry.List()
 	require.Len(t, plugins, 1)
@@ -35,9 +32,7 @@ func TestRegistrationService_RegisterPlugin_invalid_pattern(t *testing.T) {
 	registry := NewRegistry()
 	svc := &RegistrationService{Registry: registry}
 
-	req := &resolverv1.RegisterPluginRequest{}
-	req.SetName("bad-plugin")
-	req.SetPattern("!!!invalid!!!")
+	req := registerReq("bad-plugin", "v1.0.0", "!!!invalid!!!")
 
 	_, err := svc.RegisterPlugin(t.Context(), connect.NewRequest(req))
 	assert.Error(t, err)
@@ -47,9 +42,7 @@ func TestRegistrationService_RegisterPlugin_duplicate(t *testing.T) {
 	registry := NewRegistry()
 	svc := &RegistrationService{Registry: registry}
 
-	req := &resolverv1.RegisterPluginRequest{}
-	req.SetName("dup")
-	req.SetPattern("**")
+	req := registerReq("dup", "v1.0.0", "**")
 
 	_, err := svc.RegisterPlugin(t.Context(), connect.NewRequest(req))
 	require.NoError(t, err)
@@ -59,4 +52,14 @@ func TestRegistrationService_RegisterPlugin_duplicate(t *testing.T) {
 
 	plugins := registry.List()
 	assert.Len(t, plugins, 1)
+}
+
+func registerReq(name, ver, pattern string) *pluginsv1.RegisterPluginRequest {
+	sp := &pluginsv1.SecretsProvider{}
+	sp.SetPattern(pattern)
+	req := &pluginsv1.RegisterPluginRequest{}
+	req.SetName(name)
+	req.SetVersion(ver)
+	req.SetSecretsProvider(sp)
+	return req
 }

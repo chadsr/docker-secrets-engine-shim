@@ -3,9 +3,11 @@ package credstore
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/docker/cli/cli/config"
+	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/docker-credential-helpers/client"
 	"github.com/docker/docker-credential-helpers/credentials"
 
@@ -26,26 +28,41 @@ func New(programFunc client.ProgramFunc) store.Store {
 }
 
 func NewFromConfig() store.Store {
-	return New(resolveProgramFunc())
-}
-
-func resolveProgramFunc() client.ProgramFunc {
 	cfg, err := config.Load("")
 	if err != nil {
+		return New(nil)
+	}
+	return New(programFuncFromConfig(cfg))
+}
+
+func programFuncFromConfig(cfg *configfile.ConfigFile) client.ProgramFunc {
+	if cfg == nil || cfg.CredentialsStore == "" {
 		return nil
 	}
-	suffix := cfg.CredentialsStore
-	if suffix == "" {
-		return nil
-	}
-	return client.NewShellProgramFunc("docker-credential-" + suffix)
+	return client.NewShellProgramFunc("docker-credential-" + cfg.CredentialsStore)
 }
 
 func idToServerURL(id store.ID) string {
 	return id.String()
 }
 
+// trimRegistryLabel strips the "Registry credentials for " prefix that
+// docker-credential-secretservice adds to list keys.
+func trimRegistryLabel(serverURL string) string {
+	return strings.TrimPrefix(serverURL, "Registry credentials for ")
+}
+
+func (s *credStore) configured() error {
+	if s.programFunc == nil {
+		return fmt.Errorf("no credential helper configured: set credsStore in ~/.docker/config.json")
+	}
+	return nil
+}
+
 func (s *credStore) Save(_ context.Context, id store.ID, secret store.Secret) error {
+	if err := s.configured(); err != nil {
+		return err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -63,6 +80,9 @@ func (s *credStore) Save(_ context.Context, id store.ID, secret store.Secret) er
 }
 
 func (s *credStore) Upsert(ctx context.Context, id store.ID, secret store.Secret) error {
+	if err := s.configured(); err != nil {
+		return err
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -82,6 +102,9 @@ func (s *credStore) Upsert(ctx context.Context, id store.ID, secret store.Secret
 }
 
 func (s *credStore) Get(_ context.Context, id store.ID) (store.Secret, error) {
+	if err := s.configured(); err != nil {
+		return nil, err
+	}
 	cred, err := client.Get(s.programFunc, idToServerURL(id))
 	if err != nil {
 		return nil, fmt.Errorf("get secret: %w", err)
@@ -95,10 +118,16 @@ func (s *credStore) Get(_ context.Context, id store.ID) (store.Secret, error) {
 }
 
 func (s *credStore) Delete(_ context.Context, id store.ID) error {
+	if err := s.configured(); err != nil {
+		return err
+	}
 	return client.Erase(s.programFunc, idToServerURL(id))
 }
 
 func (s *credStore) GetAllMetadata(_ context.Context) (map[store.ID]store.Secret, error) {
+	if err := s.configured(); err != nil {
+		return nil, err
+	}
 	list, err := client.List(s.programFunc)
 	if err != nil {
 		return nil, fmt.Errorf("list secrets: %w", err)
@@ -106,7 +135,7 @@ func (s *credStore) GetAllMetadata(_ context.Context) (map[store.ID]store.Secret
 
 	result := make(map[store.ID]store.Secret, len(list))
 	for serverURL, username := range list {
-		id, err := secrets.ParseID(serverURL)
+		id, err := secrets.ParseID(trimRegistryLabel(serverURL))
 		if err != nil {
 			continue
 		}
@@ -118,21 +147,25 @@ func (s *credStore) GetAllMetadata(_ context.Context) (map[store.ID]store.Secret
 }
 
 func (s *credStore) Filter(_ context.Context, pattern store.Pattern) (map[store.ID]store.Secret, error) {
+	if err := s.configured(); err != nil {
+		return nil, err
+	}
 	list, err := client.List(s.programFunc)
 	if err != nil {
 		return nil, fmt.Errorf("list secrets: %w", err)
 	}
 
 	result := make(map[store.ID]store.Secret)
-	for _, serverURL := range list {
-		id, err := secrets.ParseID(serverURL)
+	for serverURL := range list {
+		key := trimRegistryLabel(serverURL)
+		id, err := secrets.ParseID(key)
 		if err != nil {
 			continue
 		}
 		if !pattern.Match(id) {
 			continue
 		}
-		cred, err := client.Get(s.programFunc, serverURL)
+		cred, err := client.Get(s.programFunc, key)
 		if err != nil {
 			continue
 		}

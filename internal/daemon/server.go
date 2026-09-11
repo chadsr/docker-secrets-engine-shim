@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"sync"
 
-	resolverv1connect "github.com/docker/secrets-engine/x/api/resolver/v1/resolverv1connect"
 	healthv1connect "github.com/docker/secrets-engine/x/api/health/v1/healthv1connect"
 	pluginsv1connect "github.com/docker/secrets-engine/x/api/plugins/v1/pluginsv1connect"
+	resolverv1connect "github.com/docker/secrets-engine/x/api/resolver/v1/resolverv1connect"
 	"github.com/docker/secrets-engine/x/ipc"
 	"github.com/docker/secrets-engine/x/logging"
 )
@@ -29,7 +29,7 @@ type Server struct {
 	pending    map[io.ReadWriteCloser]*http.Client
 }
 
-func NewServer(socketPath, version, commitHash, date string) *Server {
+func NewServer(socketPath, engineName, version, commitHash, date string) *Server {
 	s := &Server{
 		socketPath: socketPath,
 		Registry:   NewRegistry(),
@@ -50,8 +50,8 @@ func NewServer(socketPath, version, commitHash, date string) *Server {
 		&VersionService{Version: version, CommitHash: commitHash, Date: date},
 	))
 
-	mux.Handle(resolverv1connect.NewRegisterServiceHandler(
-		&RegistrationService{Registry: s.Registry, pendingClients: &s.pendingMu, pending: s.pending},
+	mux.Handle(pluginsv1connect.NewRegisterServiceHandler(
+		&RegistrationService{Registry: s.Registry, EngineName: engineName, Version: version, pendingClients: &s.pendingMu, pending: s.pending},
 	))
 
 	mux.Handle(resolverv1connect.NewResolverServiceHandler(
@@ -93,7 +93,7 @@ func (s *Server) ListenAndServe() error {
 		return fmt.Errorf("listening on %s: %w", s.socketPath, err)
 	}
 
-	return s.server.Serve(l)
+	return s.server.Serve(NewPeerCredListener(l))
 }
 
 func (s *Server) Close() error {
