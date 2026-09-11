@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	seclient "github.com/docker/secrets-engine/client"
+	seapi "github.com/docker/secrets-engine/x/api"
 	"github.com/docker/secrets-engine/x/secrets"
 )
 
@@ -42,6 +43,12 @@ func resolvingClient(values map[string]string) *fakeClient {
 
 func TestDaemonSocketPath(t *testing.T) {
 	assert.Equal(t, "@docker-secrets-engine/1000/daemon.sock", daemonSocketPath(1000))
+}
+
+// Guards the hardcoded NRI dial path against upstream scheme changes: if
+// the SDK default drifts, daemon and NRI plugin would silently desync.
+func TestDaemonSocketPathMatchesSDK(t *testing.T) {
+	assert.Equal(t, seapi.DaemonSocketPath(), daemonSocketPath(os.Getuid()))
 }
 
 func TestUIDFromConfigString(t *testing.T) {

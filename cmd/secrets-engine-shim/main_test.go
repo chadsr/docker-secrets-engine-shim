@@ -1,0 +1,52 @@
+package main
+
+import (
+	"os"
+	"path/filepath"
+	"testing"
+	"time"
+
+	"github.com/stretchr/testify/require"
+
+	"github.com/docker/secrets-engine/x/logging"
+	"github.com/user/secrets-engine-shim/internal/daemon"
+)
+
+// The plugin child process is this test binary re-exec'd: TestMain branches
+// into plugin mode instead of running the tests again.
+const testPluginChild = "SHIM_TEST_PLUGIN_CHILD"
+
+func TestMain(m *testing.M) {
+	if os.Getenv(testPluginChild) != "" {
+		runPluginMode(logging.NewDefaultLogger(cmdDockerPass))
+		return
+	}
+	os.Exit(m.Run())
+}
+
+// Exercises the full launch handshake against the real SDK: fd-passed
+// socketpair, PluginConfigFromEngine encoding, plugin registration, and the
+// yamux-backed client stored in the registry. This is the wiring an SDK
+// upgrade can silently break while unit tests stay green.
+func TestStartPluginHandshake(t *testing.T) {
+	socketPath := filepath.Join(t.TempDir(), "test.sock")
+	srv := daemon.NewServer(socketPath, engineName, version, commit, date)
+	go srv.ListenAndServe()
+	t.Cleanup(func() { srv.Close() })
+	require.Eventually(t, func() bool {
+		_, err := os.Stat(socketPath)
+		return err == nil
+	}, 5*time.Second, 10*time.Millisecond)
+
+	t.Setenv(testPluginChild, "1")
+	require.NoError(t, startPlugin(logging.NewDefaultLogger("test"), srv))
+
+	require.Eventually(t, func() bool {
+		for _, p := range srv.Registry.List() {
+			if p.Name == cmdDockerPass && p.Client != nil {
+				return true
+			}
+		}
+		return false
+	}, 15*time.Second, 50*time.Millisecond, "plugin did not register with the daemon")
+}
