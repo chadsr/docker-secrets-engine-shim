@@ -12,10 +12,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/chadsr/docker-secrets-engine-shim/internal/daemon"
 	"github.com/docker/secrets-engine/x/api"
 	"github.com/docker/secrets-engine/x/ipc"
 	"github.com/docker/secrets-engine/x/logging"
-	"github.com/user/secrets-engine-shim/internal/daemon"
 )
 
 func runDaemon() {
@@ -108,6 +108,7 @@ func startPlugin(logger logging.Logger, srv *daemon.Server) error {
 
 		cmd.Process.Wait()
 		closer.Close()
+		srv.RemovePluginClient(localConn)
 	}()
 
 	fmt.Fprintf(os.Stderr, "Started docker-pass plugin (pid %d)\n", cmd.Process.Pid)

@@ -7,6 +7,7 @@ import (
 	"os"
 	"text/tabwriter"
 
+	"github.com/chadsr/docker-secrets-engine-shim/internal/credstore"
 	"github.com/docker/secrets-engine/client"
 	"github.com/docker/secrets-engine/plugin"
 	passplugin "github.com/docker/secrets-engine/plugins/pass"
@@ -15,7 +16,6 @@ import (
 	"github.com/docker/secrets-engine/x/logging"
 	"github.com/docker/secrets-engine/x/secrets"
 	"github.com/spf13/cobra"
-	"github.com/user/secrets-engine-shim/internal/credstore"
 )
 
 type pluginMetadata struct {

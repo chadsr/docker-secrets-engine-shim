@@ -1,4 +1,4 @@
-module github.com/user/secrets-engine-shim
+module github.com/chadsr/docker-secrets-engine-shim
 
 go 1.26.0
 

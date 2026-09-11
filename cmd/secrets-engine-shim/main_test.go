@@ -8,8 +8,8 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/chadsr/docker-secrets-engine-shim/internal/daemon"
 	"github.com/docker/secrets-engine/x/logging"
-	"github.com/user/secrets-engine-shim/internal/daemon"
 )
 
 // The plugin child is this test binary re-exec'd; TestMain branches into plugin mode.
