@@ -48,8 +48,8 @@ sudo systemctl restart docker
 ```bash
 docker-secrets-engine-shim
 # or, with the unit from packaging/systemd/user/:
-cp packaging/systemd/user/docker-secrets-engine.service ~/.config/systemd/user/
-systemctl --user enable --now docker-secrets-engine.service
+cp packaging/systemd/user/docker-secrets-engine-shim.service ~/.config/systemd/user/
+systemctl --user enable --now docker-secrets-engine-shim.service
 ```
 
 ```bash
