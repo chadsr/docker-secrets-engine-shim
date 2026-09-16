@@ -19,7 +19,17 @@ Docker only releases `secrets-engine` as a proprietary, prebuilt binary, so this
 - Docker Engine 29.2+
 - A credential helper from [docker-credential-helpers](https://github.com/docker/docker-credential-helpers) and a backend: `pass` (works headless) or `secretservice` (e.g. gnome-keyring)
 
-## Build and install
+## Install
+
+### Arch Linux
+
+[docker-secrets-engine-shim](https://aur.archlinux.org/packages/docker-secrets-engine-shim) is available on the AUR:
+
+```bash
+yay -S docker-secrets-engine-shim
+```
+
+### Build from source
 
 ```bash
 make all    # dist/docker-secrets-engine-shim
