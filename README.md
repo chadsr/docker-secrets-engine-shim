@@ -29,9 +29,9 @@ sudo ln -sf docker-secrets-engine-shim /usr/bin/docker-pass
 mkdir -p ~/.docker/cli-plugins
 ln -sf /usr/bin/docker-secrets-engine-shim ~/.docker/cli-plugins/docker-pass
 
-# the dockerd plugin is discovered at this path
-sudo install -d /usr/libexec/docker/nri-plugins
-sudo ln -sf /usr/bin/docker-secrets-engine-shim /usr/libexec/docker/nri-plugins/10-secrets-engine
+# the dockerd plugin is found via nri-opts.plugin-path in daemon.json
+sudo install -d /usr/lib/docker/nri-plugins
+sudo ln -sf /usr/bin/docker-secrets-engine-shim /usr/lib/docker/nri-plugins/10-secrets-engine
 ```
 
 ## Enable se:// resolution in containers
@@ -39,7 +39,7 @@ sudo ln -sf /usr/bin/docker-secrets-engine-shim /usr/libexec/docker/nri-plugins/
 ```bash
 sudo install -d /etc/docker/nri/conf.d
 echo "uid: $(id -u)" | sudo tee /etc/docker/nri/conf.d/10-secrets-engine.conf
-echo '{"nri-opts":{"enable":true}}' | sudo tee /etc/docker/daemon.json   # merge if one exists
+echo '{"nri-opts":{"enable":true,"plugin-path":"/usr/lib/docker/nri-plugins"}}' | sudo tee /etc/docker/daemon.json   # merge if one exists
 sudo systemctl restart docker
 ```
 
