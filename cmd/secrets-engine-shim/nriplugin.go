@@ -7,6 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/containerd/nri/pkg/api"
 	"github.com/containerd/nri/pkg/stub"
@@ -19,6 +20,9 @@ import (
 const (
 	sePrefix    = "se://"
 	nriConfFile = "/etc/docker/nri/conf.d/" + cmdNRIPlugin + ".conf"
+
+	// nriResolveTimeout is slightly above the daemon's 30s plugin deadline so the daemon's error surfaces.
+	nriResolveTimeout = 35 * time.Second
 )
 
 type nriPlugin struct {
@@ -35,7 +39,10 @@ func (p *nriPlugin) Configure(_ context.Context, cfg, runtime, version string) (
 	}
 
 	socketPath := daemonSocketPath(uid)
-	p.client, err = seclient.New(seclient.WithSocketPath(socketPath))
+	p.client, err = seclient.New(
+		seclient.WithSocketPath(socketPath),
+		seclient.WithTimeout(nriResolveTimeout),
+	)
 	if err != nil {
 		return 0, fmt.Errorf("creating secrets engine client: %w", err)
 	}
