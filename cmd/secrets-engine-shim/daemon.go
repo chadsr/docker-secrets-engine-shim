@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -28,7 +29,9 @@ func runDaemon() {
 	// The abstract socket is used by the NRI plugin and the SDK default,
 	// the filesystem socket by mcp-gateway and `docker pass run`. A
 	// symlink can't point to an abstract socket, so we serve both.
-	os.MkdirAll(filepath.Dir(fsSock), 0o700)
+	if err := os.MkdirAll(filepath.Dir(fsSock), 0o700); err != nil {
+		log.Fatalf("creating socket directory %s: %v", filepath.Dir(fsSock), err)
+	}
 	os.Remove(fsSock)
 	fsListener, err := net.Listen("unix", fsSock)
 	if err != nil {
@@ -59,7 +62,7 @@ func runDaemon() {
 	}()
 
 	fmt.Fprintf(os.Stderr, "Listening on %s and %s\n", abstractSock, fsSock)
-	if err := srv.ListenAndServe(); err != nil {
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		os.Remove(fsSock)
 		log.Fatal(err)
 	}
@@ -99,16 +102,17 @@ func startPlugin(logger logging.Logger, srv *daemon.Server) error {
 	}
 
 	go func() {
-		closer, client, err := ipc.NewServerIPC(logger, localConn, srv.Mux(), nil)
+		ref := &daemon.PluginClientRef{}
+		closer, client, err := ipc.NewServerIPC(logger, localConn, daemon.TagPluginClient(srv.Mux(), ref), nil)
 		if err != nil {
 			log.Printf("plugin IPC setup error: %v", err)
 			return
 		}
-		srv.RegisterPluginClient(localConn, client)
+		ref.Set(client)
 
 		cmd.Process.Wait()
 		closer.Close()
-		srv.RemovePluginClient(localConn)
+		srv.Registry.Unregister(cmdDockerPass)
 	}()
 
 	fmt.Fprintf(os.Stderr, "Started docker-pass plugin (pid %d)\n", cmd.Process.Pid)

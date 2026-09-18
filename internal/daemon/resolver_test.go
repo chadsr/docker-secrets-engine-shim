@@ -25,7 +25,7 @@ func TestDaemonResolver_GetSecrets_no_plugins(t *testing.T) {
 func TestDaemonResolver_GetSecrets_plugin_not_connected(t *testing.T) {
 	registry := NewRegistry()
 	pattern := secrets.MustParsePattern("**")
-	registry.Register("test-plugin", pattern, nil)
+	registry.Register("test-plugin", "v1.0.0", pattern, nil)
 
 	svc := &DaemonResolver{Registry: registry}
 

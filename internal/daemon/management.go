@@ -18,6 +18,7 @@ func (m *ManagementService) ListPlugins(_ context.Context, _ *connect.Request[pl
 	for _, e := range entries {
 		p := &pluginsv1.Plugin{}
 		p.SetName(e.Name)
+		p.SetVersion(e.Version)
 		p.SetExternal(true)
 		p.SetRunStatus(pluginsv1.RunStatus_RUN_STATUS_RUNNING)
 		sp := &pluginsv1.SecretsProvider{}

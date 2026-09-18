@@ -27,8 +27,6 @@ type Server struct {
 	commitHash string
 	date       string
 	server     *http.Server
-	pendingMu  sync.Mutex
-	pending    map[io.ReadWriteCloser]*http.Client
 }
 
 func NewServer(socketPath, engineName, version, commitHash, date string) *Server {
@@ -38,7 +36,6 @@ func NewServer(socketPath, engineName, version, commitHash, date string) *Server
 		version:    version,
 		commitHash: commitHash,
 		date:       date,
-		pending:    make(map[io.ReadWriteCloser]*http.Client),
 	}
 
 	mux := http.NewServeMux()
@@ -53,7 +50,7 @@ func NewServer(socketPath, engineName, version, commitHash, date string) *Server
 	))
 
 	mux.Handle(pluginsv1connect.NewRegisterServiceHandler(
-		&RegistrationService{Registry: s.Registry, EngineName: engineName, Version: version, pendingClients: &s.pendingMu, pending: s.pending},
+		&RegistrationService{Registry: s.Registry, EngineName: engineName, Version: version},
 	))
 
 	mux.Handle(resolverv1connect.NewResolverServiceHandler(
@@ -67,20 +64,16 @@ func NewServer(socketPath, engineName, version, commitHash, date string) *Server
 	logger := logging.NewDefaultLogger("daemon")
 
 	hijackPath, hijackHandler := ipc.NewHijackAcceptor(logger, func(ctx context.Context, conn io.ReadWriteCloser) {
-		closer, client, err := ipc.NewServerIPC(logger, conn, mux, nil)
+		ref := &PluginClientRef{}
+		closer, client, err := ipc.NewServerIPC(logger, conn, TagPluginClient(mux, ref), nil)
 		if err != nil {
 			log.Printf("hijack IPC setup error: %v", err)
 			return
 		}
-		s.pendingMu.Lock()
-		s.pending[conn] = client
-		s.pendingMu.Unlock()
+		ref.Set(client)
 
 		<-ctx.Done()
 		closer.Close()
-		s.pendingMu.Lock()
-		delete(s.pending, conn)
-		s.pendingMu.Unlock()
 	})
 	mux.Handle(hijackPath, hijackHandler)
 
@@ -115,15 +108,27 @@ func (s *Server) Mux() http.Handler {
 	return s.server.Handler
 }
 
-func (s *Server) RegisterPluginClient(conn io.ReadWriteCloser, client *http.Client) {
-	s.pendingMu.Lock()
-	s.pending[conn] = client
-	s.pendingMu.Unlock()
+// PluginClientRef is the http.Client reaching a plugin over its IPC connection.
+type PluginClientRef struct {
+	mu sync.RWMutex
+	c  *http.Client
 }
 
-// RemovePluginClient drops a pending client added by RegisterPluginClient.
-func (s *Server) RemovePluginClient(conn io.ReadWriteCloser) {
-	s.pendingMu.Lock()
-	delete(s.pending, conn)
-	s.pendingMu.Unlock()
+func (r *PluginClientRef) Set(c *http.Client) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.c = c
+}
+
+func (r *PluginClientRef) Get() *http.Client {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+	return r.c
+}
+
+// TagPluginClient returns a handler that tags every request with ref.
+func TagPluginClient(h http.Handler, ref *PluginClientRef) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), pluginClientKey{}, ref)))
+	})
 }

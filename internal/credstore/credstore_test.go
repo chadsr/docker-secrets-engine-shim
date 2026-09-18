@@ -2,6 +2,7 @@ package credstore
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -168,6 +169,41 @@ func TestSecretserviceKeyPrefix(t *testing.T) {
 	filtered, err := s.Filter(ctx, secrets.MustParsePattern("db/*"))
 	require.NoError(t, err)
 	assert.Len(t, filtered, 2)
+}
+
+func TestLegacyDockerLoginKeysAreNormalized(t *testing.T) {
+	ctx := context.Background()
+	stateFile := filepath.Join(t.TempDir(), "state.json")
+	seed, err := json.Marshal(map[string]map[string]string{
+		"https://index.docker.io/v1/": {"Username": "bob", "Secret": "legacy-secret"},
+	})
+	require.NoError(t, err)
+	require.NoError(t, os.WriteFile(stateFile, seed, 0o600))
+	t.Setenv("FAKE_HELPER_STATE", stateFile)
+	s := New(client.NewShellProgramFunc(fakeHelperPath))
+
+	filtered, err := s.Filter(ctx, secrets.MustParsePattern("**"))
+	require.NoError(t, err)
+	id := mustID(t, "index.docker.io/v1")
+	require.Contains(t, filtered, id)
+	assert.Equal(t, "legacy-secret", mustValue(t, filtered[id]))
+
+	meta, err := s.GetAllMetadata(ctx)
+	require.NoError(t, err)
+	assert.Contains(t, meta, id)
+}
+
+func TestColonIDsRoundTripUnchanged(t *testing.T) {
+	ctx := context.Background()
+	s := newTestStore(t)
+
+	// ":" is a valid ID rune; URL normalization must not mangle scheme-less keys.
+	id := mustID(t, "localhost:5000/token")
+	require.NoError(t, s.Save(ctx, id, pass.NewPassValue([]byte("v"))))
+
+	filtered, err := s.Filter(ctx, secrets.MustParsePattern("**"))
+	require.NoError(t, err)
+	require.Contains(t, filtered, id)
 }
 
 func TestUnconfiguredStore(t *testing.T) {

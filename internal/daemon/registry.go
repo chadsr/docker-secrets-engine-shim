@@ -9,6 +9,7 @@ import (
 
 type PluginEntry struct {
 	Name    string
+	Version string
 	Pattern secrets.Pattern
 	Client  *http.Client
 }
@@ -25,14 +26,22 @@ func NewRegistry() *Registry {
 }
 
 // Register stores the plugin, replacing any previous entry under the same name so a reconnecting plugin gets its new client.
-func (r *Registry) Register(name string, pattern secrets.Pattern, client *http.Client) {
+func (r *Registry) Register(name, version string, pattern secrets.Pattern, client *http.Client) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	r.plugins[name] = PluginEntry{
 		Name:    name,
+		Version: version,
 		Pattern: pattern,
 		Client:  client,
 	}
+}
+
+// Unregister drops a plugin entry, e.g. when its process exits.
+func (r *Registry) Unregister(name string) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	delete(r.plugins, name)
 }
 
 func (r *Registry) FindForPattern(pattern secrets.Pattern) (PluginEntry, bool) {
