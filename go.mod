@@ -10,8 +10,8 @@ require (
 	github.com/docker/secrets-engine/client v0.1.0
 	github.com/docker/secrets-engine/plugin v0.3.2
 	github.com/docker/secrets-engine/plugins/pass v0.2.3
-	github.com/docker/secrets-engine/store v0.4.0
-	github.com/docker/secrets-engine/x v0.7.0-do.not.use
+	github.com/docker/secrets-engine/store v0.4.1
+	github.com/docker/secrets-engine/x v0.8.0
 	github.com/sirupsen/logrus v1.10.2
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1

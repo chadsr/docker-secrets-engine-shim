@@ -21,10 +21,10 @@ github.com/docker/secrets-engine/plugin v0.3.2 h1:FWHSuEY6nev3evUCS7Yt0bsyZM74ki
 github.com/docker/secrets-engine/plugin v0.3.2/go.mod h1:VAdAgcYLwEubWDNaWRAUJt6+lCBXRz3yRMNGs9/t3Gg=
 github.com/docker/secrets-engine/plugins/pass v0.2.3 h1:dZbJxsMXenlxA+2AXTmEmKOFnushaLZ+p/sRMGGXAj8=
 github.com/docker/secrets-engine/plugins/pass v0.2.3/go.mod h1:9xMZ74rf9jVDFVRs5zEAAsZ/RK7MKmHVmFRX/j2Yh88=
-github.com/docker/secrets-engine/store v0.4.0 h1:OGwwYt2xLg4U4lRaAX+8wgu+h9LmJHVl7t1WXuacGrg=
-github.com/docker/secrets-engine/store v0.4.0/go.mod h1:60n5ne9HBpOCIEyYmPl1dKd2ccz/4CIK+QGAmaLWO2M=
-github.com/docker/secrets-engine/x v0.7.0-do.not.use h1:UOaCK5H4PeVm6PlbPSQaNzHtlWNg6v/O8zIBn4i2Obk=
-github.com/docker/secrets-engine/x v0.7.0-do.not.use/go.mod h1:+s6rb56pq1B376jzzkGqZreFJ3mUtkz+kaYlMuj7/Qs=
+github.com/docker/secrets-engine/store v0.4.1 h1:AwLd+zSnLMc5GK5EAzt92qOUlsSNTKCxfSFm+5U/Leo=
+github.com/docker/secrets-engine/store v0.4.1/go.mod h1:D4pGnTOtJYPXqeL+zqKSCxPDAmdS6tkg78ykoHW8Xvo=
+github.com/docker/secrets-engine/x v0.8.0 h1:WV7gsRHvIlknQe1MAjYPy2xL2OEdOtGTit3f2NiPQY4=
+github.com/docker/secrets-engine/x v0.8.0/go.mod h1:+s6rb56pq1B376jzzkGqZreFJ3mUtkz+kaYlMuj7/Qs=
 github.com/godbus/dbus/v5 v5.2.2 h1:TUR3TgtSVDmjiXOgAAyaZbYmIeP3DPkld3jgKGV8mXQ=
 github.com/godbus/dbus/v5 v5.2.2/go.mod h1:3AAv2+hPq5rdnr5txxxRwiGjPXamgoIHgz9FPBfOp3c=
 github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek=
