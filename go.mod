@@ -1,6 +1,6 @@
 module github.com/chadsr/docker-secrets-engine-shim
 
-go 1.26.0
+go 1.27.0
 
 require (
 	connectrpc.com/connect v1.21.0
