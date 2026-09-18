@@ -39,7 +39,7 @@ func (r *Registry) FindForPattern(pattern secrets.Pattern) (PluginEntry, bool) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 	for _, p := range r.plugins {
-		if p.Pattern.Includes(pattern) || pattern.Includes(p.Pattern) {
+		if p.Pattern.Overlaps(pattern) {
 			return p, true
 		}
 	}
