@@ -11,6 +11,7 @@ import (
 	"github.com/docker/docker-credential-helpers/client"
 	"github.com/docker/docker-credential-helpers/credentials"
 
+	"github.com/docker/secrets-engine/plugins/credentialhelper"
 	pass "github.com/docker/secrets-engine/plugins/pass/store"
 	"github.com/docker/secrets-engine/store"
 	"github.com/docker/secrets-engine/x/secrets"
@@ -49,6 +50,15 @@ func idToServerURL(id store.ID) string {
 // trimRegistryLabel strips the "Registry credentials for " prefix that secretservice adds to list keys.
 func trimRegistryLabel(serverURL string) string {
 	return strings.TrimPrefix(serverURL, "Registry credentials for ")
+}
+
+// keyToID converts a credential-helper key to a secret ID. URL-style keys (docker login legacy entries) are normalized via the official rewriter; plain IDs round-trip unchanged.
+func keyToID(serverURL string) (secrets.ID, error) {
+	key := trimRegistryLabel(serverURL)
+	if strings.HasPrefix(key, "http://") || strings.HasPrefix(key, "https://") {
+		key = credentialhelper.DefaultKeyRewriter(key)
+	}
+	return secrets.ParseID(key)
 }
 
 func (s *credStore) configured() error {
@@ -134,7 +144,7 @@ func (s *credStore) GetAllMetadata(_ context.Context) (map[store.ID]store.Secret
 
 	result := make(map[store.ID]store.Secret, len(list))
 	for serverURL, username := range list {
-		id, err := secrets.ParseID(trimRegistryLabel(serverURL))
+		id, err := keyToID(serverURL)
 		if err != nil {
 			continue
 		}
@@ -156,15 +166,14 @@ func (s *credStore) Filter(_ context.Context, pattern store.Pattern) (map[store.
 
 	result := make(map[store.ID]store.Secret)
 	for serverURL := range list {
-		key := trimRegistryLabel(serverURL)
-		id, err := secrets.ParseID(key)
+		id, err := keyToID(serverURL)
 		if err != nil {
 			continue
 		}
 		if !pattern.Match(id) {
 			continue
 		}
-		cred, err := client.Get(s.programFunc, key)
+		cred, err := client.Get(s.programFunc, trimRegistryLabel(serverURL))
 		if err != nil {
 			continue
 		}
