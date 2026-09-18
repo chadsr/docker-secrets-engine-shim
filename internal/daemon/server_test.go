@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -138,6 +139,28 @@ func TestServer_resolve_secret_through_plugin(t *testing.T) {
 	require.Len(t, resp.Msg.GetEnvelopes(), 1)
 	assert.Equal(t, "mysecret", resp.Msg.GetEnvelopes()[0].GetId())
 	assert.Equal(t, []byte("resolved-value"), resp.Msg.GetEnvelopes()[0].GetValue())
+}
+
+func TestServer_abstract_socket_no_filesystem_path(t *testing.T) {
+	t.Chdir(t.TempDir())
+
+	socketPath := fmt.Sprintf("@docker-secrets-engine-test-%d/daemon.sock", os.Getpid())
+	srv := NewServer(socketPath, "test-engine", "v0.1.0", "abc123", "2026-06-03")
+	go srv.ListenAndServe()
+	t.Cleanup(func() { srv.Close() })
+
+	require.Eventually(t, func() bool {
+		conn, err := net.Dial("unix", socketPath)
+		if err != nil {
+			return false
+		}
+		conn.Close()
+		return true
+	}, 5*time.Second, 10*time.Millisecond)
+
+	entries, err := os.ReadDir(".")
+	require.NoError(t, err)
+	assert.Empty(t, entries, "abstract socket must not create files or directories")
 }
 
 type mockPluginResolver struct{}
