@@ -39,7 +39,7 @@ func TestStartPluginHandshake(t *testing.T) {
 
 	require.Eventually(t, func() bool {
 		for _, p := range srv.Registry.List() {
-			if p.Name == cmdDockerPass && p.Client != nil {
+			if p.Name == cmdDockerPass && p.Client != nil && p.Version != "" {
 				return true
 			}
 		}

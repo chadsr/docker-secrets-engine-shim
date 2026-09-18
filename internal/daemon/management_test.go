@@ -14,13 +14,14 @@ import (
 func TestManagementService_ListPlugins(t *testing.T) {
 	registry := NewRegistry()
 	pattern := secrets.MustParsePattern("**")
-	registry.Register("test-plugin", pattern, nil)
+	registry.Register("test-plugin", "v1.0.0", pattern, nil)
 
 	svc := &ManagementService{Registry: registry}
 	resp, err := svc.ListPlugins(t.Context(), connect.NewRequest(&pluginsv1.ListPluginsRequest{}))
 	require.NoError(t, err)
 	require.Len(t, resp.Msg.GetPlugins(), 1)
 	assert.Equal(t, "test-plugin", resp.Msg.GetPlugins()[0].GetName())
+	assert.Equal(t, "v1.0.0", resp.Msg.GetPlugins()[0].GetVersion())
 	assert.Equal(t, pluginsv1.RunStatus_RUN_STATUS_RUNNING, resp.Msg.GetPlugins()[0].GetRunStatus())
 }
 
