@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	connectrpc.com/connect v1.21.0
 	github.com/containerd/nri v0.12.3
-	github.com/docker/cli v29.8.0+incompatible
+	github.com/docker/cli v29.8.1+incompatible
 	github.com/docker/docker-credential-helpers v0.9.9
 	github.com/docker/secrets-engine/client v0.1.0
 	github.com/docker/secrets-engine/plugin v0.3.2
