@@ -2,6 +2,7 @@ package daemon
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -9,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	healthv1connect "github.com/docker/secrets-engine/x/api/health/v1/healthv1connect"
@@ -87,9 +89,15 @@ func NewServer(socketPath, engineName, version, commitHash, date string) *Server
 }
 
 func (s *Server) ListenAndServe() error {
-	dir := filepath.Dir(s.socketPath)
-	os.MkdirAll(dir, 0700)
-	os.Remove(s.socketPath)
+	// Skip filesystem socket path creation for abstract sockets
+	if !strings.HasPrefix(s.socketPath, "@") {
+		if err := os.MkdirAll(filepath.Dir(s.socketPath), 0o700); err != nil {
+			return fmt.Errorf("creating socket directory: %w", err)
+		}
+		if err := os.Remove(s.socketPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("removing stale socket: %w", err)
+		}
+	}
 
 	l, err := net.Listen("unix", s.socketPath)
 	if err != nil {
