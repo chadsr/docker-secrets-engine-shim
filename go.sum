@@ -15,8 +15,8 @@ github.com/docker/cli v29.8.1+incompatible h1:qYL1bCp6cRw2SB1xmLlIOPyV171dilw9W2
 github.com/docker/cli v29.8.1+incompatible/go.mod h1:JLrzqnKDaYBop7H2jaqPtU4hHvMKP+vjCwu2uszcLI8=
 github.com/docker/docker-credential-helpers v0.9.9 h1:BkydjIgZ46JnDbqyM2p2fc63KMw6y+KHL3Em/2AGJ7w=
 github.com/docker/docker-credential-helpers v0.9.9/go.mod h1:v1S+hepowrQXITkEfw6o4+BMbGot02wiKpzWhGUZK6c=
-github.com/docker/secrets-engine/client v0.1.0 h1:w03T9v1BYhIc5ZQlespci9hUC3QViJApAiFZrD7sSGs=
-github.com/docker/secrets-engine/client v0.1.0/go.mod h1:R8+OiJQWB7XDWatyOFhyyOdJ5n37iguXXFw8k9SvfZY=
+github.com/docker/secrets-engine/client v0.1.2 h1:MFfk2TTo6h25DczTQ2ByQwgg2aVrVnSEis979Xle7KM=
+github.com/docker/secrets-engine/client v0.1.2/go.mod h1:5Ocu33awF0dvSOCd9Z21qP0eFEgFn47gJROzas0pghc=
 github.com/docker/secrets-engine/plugin v0.3.2 h1:FWHSuEY6nev3evUCS7Yt0bsyZM74ki8EfF5OVvQvu6g=
 github.com/docker/secrets-engine/plugin v0.3.2/go.mod h1:VAdAgcYLwEubWDNaWRAUJt6+lCBXRz3yRMNGs9/t3Gg=
 github.com/docker/secrets-engine/plugins/credentialhelper v0.0.7 h1:tjbHeqVBdv504K5l484VR8tedx9l3LK5BbBx1CvQ6IE=
@@ -25,8 +25,8 @@ github.com/docker/secrets-engine/plugins/pass v0.2.4 h1:ITUn5A60pU6GTZoxSwU+Q+xH
 github.com/docker/secrets-engine/plugins/pass v0.2.4/go.mod h1:Cnqxj2bC2j+/WI5tQQQWVMwmyzX2nad6GSJtUSF7cEQ=
 github.com/docker/secrets-engine/store v0.4.1 h1:AwLd+zSnLMc5GK5EAzt92qOUlsSNTKCxfSFm+5U/Leo=
 github.com/docker/secrets-engine/store v0.4.1/go.mod h1:D4pGnTOtJYPXqeL+zqKSCxPDAmdS6tkg78ykoHW8Xvo=
-github.com/docker/secrets-engine/x v0.8.0 h1:WV7gsRHvIlknQe1MAjYPy2xL2OEdOtGTit3f2NiPQY4=
-github.com/docker/secrets-engine/x v0.8.0/go.mod h1:+s6rb56pq1B376jzzkGqZreFJ3mUtkz+kaYlMuj7/Qs=
+github.com/docker/secrets-engine/x v0.8.2 h1:40pNxy/HjpU9yRRo15s8k8f0Xc7PiPd6ADoJzlksObw=
+github.com/docker/secrets-engine/x v0.8.2/go.mod h1:+s6rb56pq1B376jzzkGqZreFJ3mUtkz+kaYlMuj7/Qs=
 github.com/godbus/dbus/v5 v5.2.2 h1:TUR3TgtSVDmjiXOgAAyaZbYmIeP3DPkld3jgKGV8mXQ=
 github.com/godbus/dbus/v5 v5.2.2/go.mod h1:3AAv2+hPq5rdnr5txxxRwiGjPXamgoIHgz9FPBfOp3c=
 github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek=

@@ -7,12 +7,12 @@ require (
 	github.com/containerd/nri v0.12.3
 	github.com/docker/cli v29.8.1+incompatible
 	github.com/docker/docker-credential-helpers v0.9.9
-	github.com/docker/secrets-engine/client v0.1.0
+	github.com/docker/secrets-engine/client v0.1.2
 	github.com/docker/secrets-engine/plugin v0.3.2
 	github.com/docker/secrets-engine/plugins/credentialhelper v0.0.7
 	github.com/docker/secrets-engine/plugins/pass v0.2.4
 	github.com/docker/secrets-engine/store v0.4.1
-	github.com/docker/secrets-engine/x v0.8.0
+	github.com/docker/secrets-engine/x v0.8.2
 	github.com/sirupsen/logrus v1.10.2
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
