@@ -2,11 +2,13 @@ package daemon
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"testing"
 	"time"
 
 	"connectrpc.com/connect"
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
@@ -14,9 +16,15 @@ import (
 	"github.com/docker/secrets-engine/x/secrets"
 )
 
+func discardLogger() *logrus.Entry {
+	l := logrus.New()
+	l.SetOutput(io.Discard)
+	return l.WithField("component", "daemon-test")
+}
+
 func TestDaemonResolver_GetSecrets_no_plugins(t *testing.T) {
 	registry := NewRegistry()
-	svc := &DaemonResolver{Registry: registry}
+	svc := &DaemonResolver{Registry: registry, Logger: discardLogger()}
 
 	req := &resolverv1.GetSecretsRequest{}
 	req.SetPattern("mysecret")
@@ -30,7 +38,7 @@ func TestDaemonResolver_GetSecrets_plugin_not_connected(t *testing.T) {
 	pattern := secrets.MustParsePattern("**")
 	registry.Register("test-plugin", "v1.0.0", pattern, nil)
 
-	svc := &DaemonResolver{Registry: registry}
+	svc := &DaemonResolver{Registry: registry, Logger: discardLogger()}
 
 	req := &resolverv1.GetSecretsRequest{}
 	req.SetPattern("mysecret")
@@ -42,7 +50,7 @@ func TestDaemonResolver_GetSecrets_plugin_not_connected(t *testing.T) {
 
 func TestDaemonResolver_GetSecrets_invalid_pattern(t *testing.T) {
 	registry := NewRegistry()
-	svc := &DaemonResolver{Registry: registry}
+	svc := &DaemonResolver{Registry: registry, Logger: discardLogger()}
 
 	req := &resolverv1.GetSecretsRequest{}
 	req.SetPattern("!!!invalid!!!")
@@ -61,7 +69,7 @@ func TestDaemonResolver_GetSecrets_enforces_request_timeout(t *testing.T) {
 	}
 	registry.Register("hang-plugin", "v1.0.0", secrets.MustParsePattern("**"), hanging)
 
-	svc := &DaemonResolver{Registry: registry, RequestTimeout: 50 * time.Millisecond}
+	svc := &DaemonResolver{Registry: registry, Logger: discardLogger(), RequestTimeout: 50 * time.Millisecond}
 
 	req := &resolverv1.GetSecretsRequest{}
 	req.SetPattern("mysecret")

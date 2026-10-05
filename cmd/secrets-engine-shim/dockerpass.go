@@ -13,8 +13,8 @@ import (
 	passplugin "github.com/docker/secrets-engine/plugins/pass"
 	"github.com/docker/secrets-engine/plugins/pass/commands"
 	"github.com/docker/secrets-engine/x/api"
-	"github.com/docker/secrets-engine/x/logging"
 	"github.com/docker/secrets-engine/x/secrets"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -41,7 +41,7 @@ func runDockerPass() {
 		args = args[1:]
 	}
 
-	logger := logging.NewDefaultLogger(cmdDockerPass)
+	logger := logrus.WithField("component", cmdDockerPass)
 
 	if os.Getenv(api.PluginLaunchedByEngineVar) != "" {
 		runPluginMode(logger)
@@ -79,7 +79,7 @@ func runDockerPass() {
 	}
 }
 
-func runPluginMode(logger logging.Logger) {
+func runPluginMode(logger *logrus.Entry) {
 	store := credstore.NewFromConfig()
 	pp, err := passplugin.NewPassPlugin(logger, store)
 	if err != nil {

@@ -1,10 +1,11 @@
-// Command docker-secrets-engine-shim is a multicall binary.
-// The same ELF acts as the daemon, the docker-pass CLI plugin, and the dockerd NRI plugin.
+// Command docker-secrets-engine-shim is a multicall binary: the daemon, the docker-pass CLI plugin, and the dockerd NRI plugin.
 package main
 
 import (
 	"os"
 	"path/filepath"
+
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -21,6 +22,11 @@ const (
 )
 
 func main() {
+	logrus.SetFormatter(&logrus.TextFormatter{PadLevelText: true})
+	if lvl, err := logrus.ParseLevel(os.Getenv("SECRETS_ENGINE_SHIM_LOG_LEVEL")); err == nil {
+		logrus.SetLevel(lvl)
+	}
+
 	switch filepath.Base(os.Args[0]) {
 	case cmdDockerPass, cmdPass:
 		runDockerPass()

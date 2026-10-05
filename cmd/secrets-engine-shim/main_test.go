@@ -6,10 +6,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 
 	"github.com/chadsr/docker-secrets-engine-shim/internal/daemon"
-	"github.com/docker/secrets-engine/x/logging"
 )
 
 // The plugin child is this test binary re-exec'd; TestMain branches into plugin mode.
@@ -17,7 +17,7 @@ const testPluginChild = "SHIM_TEST_PLUGIN_CHILD"
 
 func TestMain(m *testing.M) {
 	if os.Getenv(testPluginChild) != "" {
-		runPluginMode(logging.NewDefaultLogger(cmdDockerPass))
+		runPluginMode(logrus.WithField("component", "test-plugin-child"))
 		return
 	}
 	os.Exit(m.Run())
@@ -35,7 +35,7 @@ func TestStartPluginHandshake(t *testing.T) {
 	}, 5*time.Second, 10*time.Millisecond)
 
 	t.Setenv(testPluginChild, "1")
-	require.NoError(t, startPlugin(logging.NewDefaultLogger("test"), srv))
+	require.NoError(t, startPlugin(logrus.WithField("component", "test"), srv))
 
 	require.Eventually(t, func() bool {
 		for _, p := range srv.Registry.List() {

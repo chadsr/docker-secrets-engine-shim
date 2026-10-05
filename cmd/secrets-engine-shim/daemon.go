@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -13,41 +12,41 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/sirupsen/logrus"
+
 	"github.com/chadsr/docker-secrets-engine-shim/internal/daemon"
 	"github.com/docker/secrets-engine/x/api"
 	"github.com/docker/secrets-engine/x/ipc"
-	"github.com/docker/secrets-engine/x/logging"
 )
 
 func runDaemon() {
 	abstractSock := api.StandaloneSocketPath()
 	fsSock := api.DesktopSocketPath()
-	logger := logging.NewDefaultLogger("daemon")
 
 	srv := daemon.NewServer(abstractSock, engineName, version, commit, date)
+	logger := srv.Logger
 
-	// The abstract socket is used by the NRI plugin and the SDK default,
-	// the filesystem socket by mcp-gateway and `docker pass run`. A
-	// symlink can't point to an abstract socket, so we serve both.
+	// Abstract socket: NRI plugin, SDK default. Filesystem socket: mcp-gateway, `docker pass run`
 	if err := os.MkdirAll(filepath.Dir(fsSock), 0o700); err != nil {
-		log.Fatalf("creating socket directory %s: %v", filepath.Dir(fsSock), err)
+		logger.Fatalf("creating socket directory %s: %v", filepath.Dir(fsSock), err)
 	}
 	os.Remove(fsSock)
 	fsListener, err := net.Listen("unix", fsSock)
 	if err != nil {
-		log.Fatalf("listen on %s: %v", fsSock, err)
+		logger.Fatalf("listen on %s: %v", fsSock, err)
 	}
 	if err := os.Chmod(fsSock, 0o600); err != nil {
-		log.Printf("chmod %s: %v", fsSock, err)
+		logger.Warnf("chmod %s: %v", fsSock, err)
 	}
 	go func() {
-		if err := http.Serve(daemon.NewPeerCredListener(fsListener), srv.Mux()); err != nil {
-			log.Printf("filesystem socket: %v", err)
+		err := http.Serve(daemon.NewPeerCredListener(fsListener), srv.Mux())
+		if err != nil && !errors.Is(err, http.ErrServerClosed) && !errors.Is(err, net.ErrClosed) {
+			logger.WithError(err).Error("filesystem socket serve loop died")
 		}
 	}()
 
 	if err := startPlugin(logger, srv); err != nil {
-		log.Fatalf("could not start docker-pass plugin: %v", err)
+		logger.Fatalf("could not start docker-pass plugin: %v", err)
 	}
 
 	sigCh := make(chan os.Signal, 1)
@@ -55,21 +54,21 @@ func runDaemon() {
 
 	go func() {
 		<-sigCh
-		log.Println("Shutting down...")
+		logger.Info("shutting down")
 		fsListener.Close()
 		os.Remove(fsSock)
 		srv.Close()
 	}()
 
-	fmt.Fprintf(os.Stderr, "Listening on %s and %s\n", abstractSock, fsSock)
+	logger.Infof("listening on %s and %s", abstractSock, fsSock)
 	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		os.Remove(fsSock)
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 }
 
 // startPlugin spawns this binary as the docker-pass plugin subprocess.
-func startPlugin(logger logging.Logger, srv *daemon.Server) error {
+func startPlugin(logger *logrus.Entry, srv *daemon.Server) error {
 	self, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("resolving executable path: %w", err)
@@ -105,7 +104,7 @@ func startPlugin(logger logging.Logger, srv *daemon.Server) error {
 		ref := &daemon.PluginClientRef{}
 		closer, client, err := ipc.NewServerIPC(logger, localConn, daemon.TagPluginClient(srv.Mux(), ref), nil)
 		if err != nil {
-			log.Printf("plugin IPC setup error: %v", err)
+			logger.WithError(err).Error("plugin IPC setup error")
 			return
 		}
 		ref.Set(client)
@@ -115,6 +114,6 @@ func startPlugin(logger logging.Logger, srv *daemon.Server) error {
 		srv.Registry.Unregister(cmdDockerPass)
 	}()
 
-	fmt.Fprintf(os.Stderr, "Started docker-pass plugin (pid %d)\n", cmd.Process.Pid)
+	logger.Infof("started docker-pass plugin (pid %d)", cmd.Process.Pid)
 	return nil
 }
