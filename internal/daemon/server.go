@@ -15,6 +15,7 @@ import (
 
 	healthv1connect "github.com/docker/secrets-engine/x/api/health/v1/healthv1connect"
 	pluginsv1connect "github.com/docker/secrets-engine/x/api/plugins/v1/pluginsv1connect"
+	resolver "github.com/docker/secrets-engine/x/api/resolver"
 	resolverv1connect "github.com/docker/secrets-engine/x/api/resolver/v1/resolverv1connect"
 	"github.com/docker/secrets-engine/x/ipc"
 	"github.com/docker/secrets-engine/x/logging"
@@ -55,6 +56,11 @@ func NewServer(socketPath, engineName, version, commitHash, date string) *Server
 
 	mux.Handle(resolverv1connect.NewResolverServiceHandler(
 		&DaemonResolver{Registry: s.Registry},
+	))
+
+	// `docker pass run` authorizes before resolving; the engine must serve this.
+	mux.Handle(resolverv1connect.NewAuthorizerServiceHandler(
+		resolver.NewAuthorizerHandler(allowAllAuthorizer{}),
 	))
 
 	mux.Handle(pluginsv1connect.NewPluginManagementServiceHandler(

@@ -52,6 +52,24 @@ func TestServer_version(t *testing.T) {
 	assert.Equal(t, "v0.1.0", resp.Msg.GetVersion())
 }
 
+func TestServer_authorize(t *testing.T) {
+	socketPath := filepath.Join(t.TempDir(), "test.sock")
+	srv := NewServer(socketPath, "test-engine", "v0.1.0", "abc123", "2026-06-03")
+	go srv.ListenAndServe()
+	t.Cleanup(func() { srv.Close() })
+	waitForSocket(t, socketPath)
+
+	client := unixHTTPClient(socketPath)
+	authorizerClient := resolverv1connect.NewAuthorizerServiceClient(client, "http://unix")
+
+	req := &resolverv1.AuthorizeRequest{}
+	req.SetPatterns([]string{"db/pass", "db/*"})
+	resp, err := authorizerClient.Authorize(t.Context(), connect.NewRequest(req))
+	require.NoError(t, err)
+	assert.Equal(t, resolverv1.Decision_DECISION_ALLOW, resp.Msg.GetDecision())
+	assert.False(t, resp.Msg.HasExpiresAt(), "never-expiring decision must omit the timestamp")
+}
+
 func TestServer_plugin_hijack_and_register(t *testing.T) {
 	socketPath := filepath.Join(t.TempDir(), "test.sock")
 	srv := NewServer(socketPath, "test-engine", "v0.1.0", "abc123", "2026-06-03")

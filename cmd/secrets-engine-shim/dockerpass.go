@@ -59,12 +59,17 @@ func runDockerPass() {
 		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 	}
 	root.SetHelpCommand(&cobra.Command{Hidden: true})
+	runCmd, err := commands.RunCommand()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to create run command: %v\n", err)
+		os.Exit(1)
+	}
 	root.AddCommand(
 		commands.SetCommand(),
 		commands.GetCommand(),
 		commands.ListCommand(),
 		commands.RmCommand(),
-		commands.RunCommand(),
+		runCmd,
 		commands.VersionCommand(commands.VersionInfo{Version: version, Commit: commit}),
 		pluginsCommand(),
 	)
