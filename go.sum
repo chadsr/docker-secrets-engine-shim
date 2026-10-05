@@ -25,8 +25,8 @@ github.com/docker/secrets-engine/plugins/pass v0.2.4 h1:ITUn5A60pU6GTZoxSwU+Q+xH
 github.com/docker/secrets-engine/plugins/pass v0.2.4/go.mod h1:Cnqxj2bC2j+/WI5tQQQWVMwmyzX2nad6GSJtUSF7cEQ=
 github.com/docker/secrets-engine/store v0.4.1 h1:AwLd+zSnLMc5GK5EAzt92qOUlsSNTKCxfSFm+5U/Leo=
 github.com/docker/secrets-engine/store v0.4.1/go.mod h1:D4pGnTOtJYPXqeL+zqKSCxPDAmdS6tkg78ykoHW8Xvo=
-github.com/docker/secrets-engine/x v0.8.0 h1:WV7gsRHvIlknQe1MAjYPy2xL2OEdOtGTit3f2NiPQY4=
-github.com/docker/secrets-engine/x v0.8.0/go.mod h1:+s6rb56pq1B376jzzkGqZreFJ3mUtkz+kaYlMuj7/Qs=
+github.com/docker/secrets-engine/x v0.8.2 h1:40pNxy/HjpU9yRRo15s8k8f0Xc7PiPd6ADoJzlksObw=
+github.com/docker/secrets-engine/x v0.8.2/go.mod h1:+s6rb56pq1B376jzzkGqZreFJ3mUtkz+kaYlMuj7/Qs=
 github.com/godbus/dbus/v5 v5.2.2 h1:TUR3TgtSVDmjiXOgAAyaZbYmIeP3DPkld3jgKGV8mXQ=
 github.com/godbus/dbus/v5 v5.2.2/go.mod h1:3AAv2+hPq5rdnr5txxxRwiGjPXamgoIHgz9FPBfOp3c=
 github.com/golang/protobuf v1.5.4 h1:i7eJL8qZTpSEXOPTxNKhASYpMn+8e5Q6AdndVa1dWek=
