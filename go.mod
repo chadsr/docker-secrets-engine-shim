@@ -10,7 +10,7 @@ require (
 	github.com/docker/secrets-engine/client v0.1.2
 	github.com/docker/secrets-engine/plugin v0.3.2
 	github.com/docker/secrets-engine/plugins/credentialhelper v0.0.7
-	github.com/docker/secrets-engine/plugins/pass v0.2.4
+	github.com/docker/secrets-engine/plugins/pass v0.3.1
 	github.com/docker/secrets-engine/store v0.4.1
 	github.com/docker/secrets-engine/x v0.8.2
 	github.com/sirupsen/logrus v1.10.2

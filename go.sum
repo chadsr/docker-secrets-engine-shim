@@ -21,8 +21,8 @@ github.com/docker/secrets-engine/plugin v0.3.2 h1:FWHSuEY6nev3evUCS7Yt0bsyZM74ki
 github.com/docker/secrets-engine/plugin v0.3.2/go.mod h1:VAdAgcYLwEubWDNaWRAUJt6+lCBXRz3yRMNGs9/t3Gg=
 github.com/docker/secrets-engine/plugins/credentialhelper v0.0.7 h1:tjbHeqVBdv504K5l484VR8tedx9l3LK5BbBx1CvQ6IE=
 github.com/docker/secrets-engine/plugins/credentialhelper v0.0.7/go.mod h1:71tsdl1hQ4FxLQlkLXLD1d4FEUeHJBMEaB9H6HgRocw=
-github.com/docker/secrets-engine/plugins/pass v0.2.4 h1:ITUn5A60pU6GTZoxSwU+Q+xHZn+hWofmjLI1a/Yfots=
-github.com/docker/secrets-engine/plugins/pass v0.2.4/go.mod h1:Cnqxj2bC2j+/WI5tQQQWVMwmyzX2nad6GSJtUSF7cEQ=
+github.com/docker/secrets-engine/plugins/pass v0.3.1 h1:5L19BJfO4OrBNeqCYcS2kYB8OD0JTOMpFnKJgK/+d1s=
+github.com/docker/secrets-engine/plugins/pass v0.3.1/go.mod h1:B+jyReIaUUfAOx9B/CFQ7G7fWQrGM4AZ4Na/2p33v2c=
 github.com/docker/secrets-engine/store v0.4.1 h1:AwLd+zSnLMc5GK5EAzt92qOUlsSNTKCxfSFm+5U/Leo=
 github.com/docker/secrets-engine/store v0.4.1/go.mod h1:D4pGnTOtJYPXqeL+zqKSCxPDAmdS6tkg78ykoHW8Xvo=
 github.com/docker/secrets-engine/x v0.8.2 h1:40pNxy/HjpU9yRRo15s8k8f0Xc7PiPd6ADoJzlksObw=
