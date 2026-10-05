@@ -5,6 +5,7 @@ linters:
     - bidichk
     - bodyclose
     - containedctx
+    - errorlint
     - gocheckcompilerdirectives
     - intrange
     - makezero

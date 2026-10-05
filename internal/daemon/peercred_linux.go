@@ -3,10 +3,10 @@
 package daemon
 
 import (
-	"log"
 	"net"
 	"os"
 
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )
 
@@ -26,7 +26,7 @@ func NewPeerCredListener(l net.Listener) net.Listener {
 	return &peerCredListener{
 		Listener: l,
 		owner:    uint32(os.Getuid()),
-		logf:     log.Printf,
+		logf:     logrus.WithField("component", "daemon").Warnf,
 	}
 }
 
@@ -39,12 +39,12 @@ func (l *peerCredListener) Accept() (net.Conn, error) {
 
 		cred := peerCred(conn)
 		if cred == nil {
-			l.logf("daemon: closing connection with unknown peer credentials")
+			l.logf("closing connection with unknown peer credentials")
 			conn.Close()
 			continue
 		}
 		if !allowedPeerUID(cred.Uid, l.owner) {
-			l.logf("daemon: closing untrusted connection from uid %d (pid %d)", cred.Uid, cred.Pid)
+			l.logf("closing untrusted connection from uid %d (pid %d)", cred.Uid, cred.Pid)
 			conn.Close()
 			continue
 		}

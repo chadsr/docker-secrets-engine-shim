@@ -10,6 +10,7 @@ import (
 	"github.com/docker/cli/cli/config/configfile"
 	"github.com/docker/docker-credential-helpers/client"
 	"github.com/docker/docker-credential-helpers/credentials"
+	"github.com/sirupsen/logrus"
 
 	"github.com/docker/secrets-engine/plugins/credentialhelper"
 	pass "github.com/docker/secrets-engine/plugins/pass/store"
@@ -17,9 +18,13 @@ import (
 	"github.com/docker/secrets-engine/x/secrets"
 )
 
+var logger = logrus.WithField("component", "credstore")
+
 type credStore struct {
 	mu          sync.Mutex
 	programFunc client.ProgramFunc
+	// loadErr is surfaced by configured() so config load failures aren't masked as "not configured".
+	loadErr error
 }
 
 var _ store.Store = &credStore{}
@@ -31,7 +36,7 @@ func New(programFunc client.ProgramFunc) store.Store {
 func NewFromConfig() store.Store {
 	cfg, err := config.Load("")
 	if err != nil {
-		return New(nil)
+		return &credStore{loadErr: fmt.Errorf("loading docker config: %w", err)}
 	}
 	return New(programFuncFromConfig(cfg))
 }
@@ -52,7 +57,7 @@ func trimRegistryLabel(serverURL string) string {
 	return strings.TrimPrefix(serverURL, "Registry credentials for ")
 }
 
-// keyToID converts a credential-helper key to a secret ID. URL-style keys (docker login legacy entries) are normalized via the official rewriter; plain IDs round-trip unchanged.
+// keyToID converts a credential-helper key to a secret ID; URL-style keys (legacy docker logins) are normalized via the official rewriter.
 func keyToID(serverURL string) (secrets.ID, error) {
 	key := trimRegistryLabel(serverURL)
 	if strings.HasPrefix(key, "http://") || strings.HasPrefix(key, "https://") {
@@ -62,6 +67,9 @@ func keyToID(serverURL string) (secrets.ID, error) {
 }
 
 func (s *credStore) configured() error {
+	if s.loadErr != nil {
+		return s.loadErr
+	}
 	if s.programFunc == nil {
 		return fmt.Errorf("no credential helper configured: set credsStore in ~/.docker/config.json")
 	}
@@ -146,6 +154,7 @@ func (s *credStore) GetAllMetadata(_ context.Context) (map[store.ID]store.Secret
 	for serverURL, username := range list {
 		id, err := keyToID(serverURL)
 		if err != nil {
+			logger.WithError(err).WithField("key", serverURL).Debug("skipping credential entry: unparseable key")
 			continue
 		}
 		pv := pass.NewPassValue(nil)
@@ -168,6 +177,7 @@ func (s *credStore) Filter(_ context.Context, pattern store.Pattern) (map[store.
 	for serverURL := range list {
 		id, err := keyToID(serverURL)
 		if err != nil {
+			logger.WithError(err).WithField("key", serverURL).Debug("skipping credential entry: unparseable key")
 			continue
 		}
 		if !pattern.Match(id) {
@@ -175,6 +185,7 @@ func (s *credStore) Filter(_ context.Context, pattern store.Pattern) (map[store.
 		}
 		cred, err := client.Get(s.programFunc, trimRegistryLabel(serverURL))
 		if err != nil {
+			logger.WithError(err).WithField("key", serverURL).Debug("skipping credential entry: get failed")
 			continue
 		}
 		pv := pass.NewPassValue([]byte(cred.Secret))

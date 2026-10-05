@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"net/http"
 	"os"
@@ -13,17 +12,19 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/sirupsen/logrus"
+
 	healthv1connect "github.com/docker/secrets-engine/x/api/health/v1/healthv1connect"
 	pluginsv1connect "github.com/docker/secrets-engine/x/api/plugins/v1/pluginsv1connect"
 	resolver "github.com/docker/secrets-engine/x/api/resolver"
 	resolverv1connect "github.com/docker/secrets-engine/x/api/resolver/v1/resolverv1connect"
 	"github.com/docker/secrets-engine/x/ipc"
-	"github.com/docker/secrets-engine/x/logging"
 )
 
 type Server struct {
 	socketPath string
 	Registry   *Registry
+	Logger     *logrus.Entry
 	version    string
 	commitHash string
 	date       string
@@ -31,9 +32,11 @@ type Server struct {
 }
 
 func NewServer(socketPath, engineName, version, commitHash, date string) *Server {
+	logger := logrus.WithField("component", "daemon")
 	s := &Server{
 		socketPath: socketPath,
 		Registry:   NewRegistry(),
+		Logger:     logger,
 		version:    version,
 		commitHash: commitHash,
 		date:       date,
@@ -55,25 +58,23 @@ func NewServer(socketPath, engineName, version, commitHash, date string) *Server
 	))
 
 	mux.Handle(resolverv1connect.NewResolverServiceHandler(
-		&DaemonResolver{Registry: s.Registry},
+		&DaemonResolver{Registry: s.Registry, Logger: logger},
 	))
 
 	// `docker pass run` authorizes before resolving; the engine must serve this.
 	mux.Handle(resolverv1connect.NewAuthorizerServiceHandler(
-		resolver.NewAuthorizerHandler(allowAllAuthorizer{}),
+		resolver.NewAuthorizerHandler(allowAllAuthorizer{logger: logger}),
 	))
 
 	mux.Handle(pluginsv1connect.NewPluginManagementServiceHandler(
 		&ManagementService{Registry: s.Registry},
 	))
 
-	logger := logging.NewDefaultLogger("daemon")
-
 	hijackPath, hijackHandler := ipc.NewHijackAcceptor(logger, func(ctx context.Context, conn io.ReadWriteCloser) {
 		ref := &PluginClientRef{}
 		closer, client, err := ipc.NewServerIPC(logger, conn, TagPluginClient(mux, ref), nil)
 		if err != nil {
-			log.Printf("hijack IPC setup error: %v", err)
+			logger.WithError(err).Error("hijack IPC setup error")
 			return
 		}
 		ref.Set(client)

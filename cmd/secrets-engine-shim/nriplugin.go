@@ -78,7 +78,7 @@ func (p *nriPlugin) CreateContainer(ctx context.Context, _ *api.PodSandbox, ctr 
 	}
 
 	if len(adjustment.Env) > 0 {
-		logrus.Infof("container %s: resolved %d secret(s)", ctr.GetName(), len(adjustment.Env)/2)
+		logrus.Debugf("container %s: resolved %d secret(s)", ctr.GetName(), len(adjustment.Env)/2)
 	}
 	return adjustment, nil, nil
 }
@@ -149,7 +149,6 @@ func runNRIPlugin() {
 		idx    string
 		socket string
 	)
-	logrus.SetFormatter(&logrus.TextFormatter{PadLevelText: true})
 
 	flag.StringVar(&name, "name", "", "NRI plugin name")
 	flag.StringVar(&idx, "idx", "", "NRI plugin index")

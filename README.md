@@ -69,6 +69,8 @@ TOKEN=se://mytoken docker pass run -- env | grep TOKEN             # resolve wit
 docker mcp secret set apikey=sk-...                                # mcp-gateway interop
 ```
 
+Set `SECRETS_ENGINE_SHIM_LOG_LEVEL` (e.g. `debug`) to change the daemon's log verbosity.
+
 ## Security
 
 The daemon only accepts connections from your own user and root. Secrets share the credential helper store with `docker login` registry credentials: only use `se://` references you control. When a secret cannot be resolved, container creation fails, matching the official engine.
