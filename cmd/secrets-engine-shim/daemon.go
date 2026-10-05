@@ -20,8 +20,8 @@ import (
 )
 
 func runDaemon() {
-	abstractSock := api.DaemonSocketPath()
-	fsSock := api.DefaultSocketPath()
+	abstractSock := api.StandaloneSocketPath()
+	fsSock := api.DesktopSocketPath()
 	logger := logging.NewDefaultLogger("daemon")
 
 	srv := daemon.NewServer(abstractSock, engineName, version, commit, date)

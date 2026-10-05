@@ -38,7 +38,7 @@ func (p *nriPlugin) Configure(_ context.Context, cfg, runtime, version string) (
 		return 0, fmt.Errorf("resolving daemon UID: %w", err)
 	}
 
-	socketPath := daemonSocketPath(uid)
+	socketPath := standaloneSocketPath(uid)
 	p.client, err = seclient.New(
 		seclient.WithSocketPath(socketPath),
 		seclient.WithTimeout(nriResolveTimeout),
@@ -108,7 +108,7 @@ func (p *nriPlugin) onClose() {
 	os.Exit(1)
 }
 
-func daemonSocketPath(uid int) string {
+func standaloneSocketPath(uid int) string {
 	return fmt.Sprintf("@docker-secrets-engine/%d/daemon.sock", uid)
 }
 

@@ -48,3 +48,11 @@ func (d *DaemonResolver) requestTimeout() time.Duration {
 	}
 	return defaultRequestTimeout
 }
+
+// allowAllAuthorizer allows everything: the shim has no identity provider to consult.
+type allowAllAuthorizer struct{}
+
+func (allowAllAuthorizer) Authorize(_ context.Context, _ ...secrets.Pattern) (secrets.AuthorizeResponse, error) {
+	// Zero Expiry means the decision never expires.
+	return secrets.AuthorizeResponse{Allow: true}, nil
+}
