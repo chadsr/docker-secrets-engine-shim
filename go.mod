@@ -12,7 +12,7 @@ require (
 	github.com/docker/secrets-engine/plugins/credentialhelper v0.0.7
 	github.com/docker/secrets-engine/plugins/pass v0.3.1
 	github.com/docker/secrets-engine/store v0.4.1
-	github.com/docker/secrets-engine/x v0.8.2
+	github.com/docker/secrets-engine/x v0.8.3
 	github.com/sirupsen/logrus v1.10.2
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
