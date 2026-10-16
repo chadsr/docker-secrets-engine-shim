@@ -1,18 +1,18 @@
 module github.com/chadsr/docker-secrets-engine-shim
 
-go 1.27.0
+go 1.27.2
 
 require (
 	connectrpc.com/connect v1.21.0
 	github.com/containerd/nri v0.12.3
 	github.com/docker/cli v29.8.2+incompatible
 	github.com/docker/docker-credential-helpers v0.9.9
-	github.com/docker/secrets-engine/client v0.1.2
+	github.com/docker/secrets-engine/client v0.2.0
 	github.com/docker/secrets-engine/plugin v0.3.2
 	github.com/docker/secrets-engine/plugins/credentialhelper v0.0.7
-	github.com/docker/secrets-engine/plugins/pass v0.3.1
+	github.com/docker/secrets-engine/plugins/pass v0.4.1
 	github.com/docker/secrets-engine/store v0.4.1
-	github.com/docker/secrets-engine/x v0.8.2
+	github.com/docker/secrets-engine/x v0.8.3
 	github.com/sirupsen/logrus v1.10.2
 	github.com/spf13/cobra v1.10.2
 	github.com/stretchr/testify v1.12.1
@@ -21,6 +21,7 @@ require (
 )
 
 require (
+	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/containerd/log v0.2.0 // indirect
 	github.com/containerd/ttrpc v1.2.10 // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
