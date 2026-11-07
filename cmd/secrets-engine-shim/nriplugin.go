@@ -158,6 +158,8 @@ func runNRIPlugin() {
 	p := &nriPlugin{}
 	opts := []stub.Option{
 		stub.WithOnClose(p.onClose),
+		// Fail closed on timeout/conn errors; stay registered (nothing restarts us).
+		stub.WithFailurePolicy(&api.FailurePolicy{FailRequest: true, KeepConnected: true}),
 	}
 	if name != "" {
 		opts = append(opts, stub.WithPluginName(name))
