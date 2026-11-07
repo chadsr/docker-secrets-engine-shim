@@ -2,14 +2,9 @@ package daemon
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"io"
 	"net"
 	"net/http"
-	"os"
-	"path/filepath"
-	"strings"
 	"sync"
 
 	"github.com/sirupsen/logrus"
@@ -88,23 +83,21 @@ func NewServer(socketPath, engineName, version, commitHash, date string) *Server
 	return s
 }
 
-func (s *Server) ListenAndServe() error {
-	// Skip filesystem socket path creation for abstract sockets
-	if !strings.HasPrefix(s.socketPath, "@") {
-		if err := os.MkdirAll(filepath.Dir(s.socketPath), 0o700); err != nil {
-			return fmt.Errorf("creating socket directory: %w", err)
-		}
-		if err := os.Remove(s.socketPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-			return fmt.Errorf("removing stale socket: %w", err)
-		}
-	}
+// Listen binds the server socket and returns the listener without serving.
+func (s *Server) Listen() (net.Listener, error) {
+	return ListenUnix(s.socketPath)
+}
 
-	l, err := net.Listen("unix", s.socketPath)
-	if err != nil {
-		return fmt.Errorf("listening on %s: %w", s.socketPath, err)
-	}
-
+func (s *Server) Serve(l net.Listener) error {
 	return s.server.Serve(NewPeerCredListener(l))
+}
+
+func (s *Server) ListenAndServe() error {
+	l, err := s.Listen()
+	if err != nil {
+		return err
+	}
+	return s.Serve(l)
 }
 
 func (s *Server) Close() error {

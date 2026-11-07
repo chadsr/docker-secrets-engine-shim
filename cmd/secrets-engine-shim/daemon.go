@@ -8,11 +8,11 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/cobra"
 
 	"github.com/chadsr/docker-secrets-engine-shim/internal/daemon"
 	"github.com/docker/secrets-engine/x/api"
@@ -20,32 +20,61 @@ import (
 )
 
 func runDaemon() {
+	root := newDaemonCommand()
+	if err := root.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+// newDaemonCommand handles --help/--version and rejects bad flags before any socket is touched.
+func newDaemonCommand() *cobra.Command {
+	root := &cobra.Command{
+		Use:               "docker-secrets-engine-shim",
+		Short:             "Run the secrets engine shim daemon.",
+		SilenceUsage:      true,
+		SilenceErrors:     true,
+		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
+		Args:              cobra.NoArgs,
+		Version:           version,
+	}
+	root.SetVersionTemplate(fmt.Sprintf("docker-secrets-engine-shim %s (commit %s, built %s)\n", version, commit, date))
+	root.Run = func(_ *cobra.Command, _ []string) { daemonMain() }
+	return root
+}
+
+func daemonMain() {
 	abstractSock := api.StandaloneSocketPath()
 	fsSock := api.DesktopSocketPath()
 
 	srv := daemon.NewServer(abstractSock, engineName, version, commit, date)
 	logger := srv.Logger
 
-	// Abstract socket: NRI plugin, SDK default. Filesystem socket: mcp-gateway, `docker pass run`
-	if err := os.MkdirAll(filepath.Dir(fsSock), 0o700); err != nil {
-		logger.Fatalf("creating socket directory %s: %v", filepath.Dir(fsSock), err)
-	}
-	os.Remove(fsSock)
-	fsListener, err := net.Listen("unix", fsSock)
+	// The abstract socket is exclusive: bind it first so a second instance fails before touching anything.
+	abstractListener, err := daemon.ListenUnix(abstractSock)
 	if err != nil {
-		logger.Fatalf("listen on %s: %v", fsSock, err)
+		logger.WithError(err).Fatal("could not bind abstract socket; is another instance already running?")
+	}
+
+	// Abstract socket: NRI plugin, SDK default. Filesystem socket: mcp-gateway, `docker pass run`.
+	fsListener, err := daemon.ListenUnix(fsSock)
+	if err != nil {
+		abstractListener.Close()
+		logger.Fatalf("listening on %s: %v", fsSock, err)
 	}
 	if err := os.Chmod(fsSock, 0o600); err != nil {
 		logger.Warnf("chmod %s: %v", fsSock, err)
 	}
 	go func() {
-		err := http.Serve(daemon.NewPeerCredListener(fsListener), srv.Mux())
-		if err != nil && !errors.Is(err, http.ErrServerClosed) && !errors.Is(err, net.ErrClosed) {
+		if err := srv.Serve(fsListener); err != nil && !errors.Is(err, http.ErrServerClosed) && !errors.Is(err, net.ErrClosed) {
 			logger.WithError(err).Error("filesystem socket serve loop died")
 		}
 	}()
 
 	if err := startPlugin(logger, srv); err != nil {
+		abstractListener.Close()
+		fsListener.Close()
+		os.Remove(fsSock)
 		logger.Fatalf("could not start docker-pass plugin: %v", err)
 	}
 
@@ -55,13 +84,14 @@ func runDaemon() {
 	go func() {
 		<-sigCh
 		logger.Info("shutting down")
+		abstractListener.Close()
 		fsListener.Close()
 		os.Remove(fsSock)
 		srv.Close()
 	}()
 
 	logger.Infof("listening on %s and %s", abstractSock, fsSock)
-	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+	if err := srv.Serve(abstractListener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		os.Remove(fsSock)
 		logger.Fatal(err)
 	}
