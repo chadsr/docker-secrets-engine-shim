@@ -59,32 +59,12 @@ func runDockerPass() {
 		CompletionOptions: cobra.CompletionOptions{DisableDefaultCmd: true},
 	}
 	root.SetHelpCommand(&cobra.Command{Hidden: true})
-	setCmd, err := commands.SetCommand()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to create set command: %v\n", err)
-		os.Exit(1)
-	}
-	getCmd, err := commands.GetCommand()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to create get command: %v\n", err)
-		os.Exit(1)
-	}
-	runCmd, err := commands.RunCommand()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to create run command: %v\n", err)
-		os.Exit(1)
-	}
-	rmCmd, err := commands.RmCommand()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to create rm command: %v\n", err)
-		os.Exit(1)
-	}
 	root.AddCommand(
-		setCmd,
-		getCmd,
+		mustCommand(commands.SetCommand()),
+		mustCommand(commands.GetCommand()),
 		commands.ListCommand(),
-		rmCmd,
-		runCmd,
+		mustCommand(commands.RmCommand()),
+		mustCommand(commands.RunCommand()),
 		commands.VersionCommand(commands.VersionInfo{Version: version, Commit: commit}),
 		pluginsCommand(),
 	)
@@ -92,6 +72,14 @@ func runDockerPass() {
 	if err := root.ExecuteContext(ctx); err != nil {
 		os.Exit(1)
 	}
+}
+
+func mustCommand(cmd *cobra.Command, err error) *cobra.Command {
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to create pass command: %v\n", err)
+		os.Exit(1)
+	}
+	return cmd
 }
 
 func runPluginMode(logger *logrus.Entry) {
