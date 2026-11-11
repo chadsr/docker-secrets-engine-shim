@@ -6,7 +6,7 @@ LDFLAGS  := -ldflags "-X main.version=$(VERSION) -X main.commit=$(COMMIT) -X mai
 
 BINS := docker-secrets-engine-shim
 
-.PHONY: all $(BINS) clean test
+.PHONY: all $(BINS) clean test test-ci
 
 all: $(BINS)
 
@@ -17,4 +17,7 @@ clean:
 	rm -rf dist
 
 test:
-	go test ./...
+	go test -race ./...
+
+test-ci:
+	go test -race -coverprofile=coverage.txt ./...
