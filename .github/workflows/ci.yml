@@ -54,4 +54,10 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: go test
-        run: go test -race ./...
+        run: make test-ci
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: chadsr/docker-secrets-engine-shim
