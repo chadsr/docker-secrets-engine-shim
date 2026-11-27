@@ -7,8 +7,8 @@ require (
 	github.com/containerd/nri v0.12.5
 	github.com/docker/cli v29.9.3+incompatible
 	github.com/docker/docker-credential-helpers v0.9.12
-	github.com/docker/secrets-engine/client v0.2.2
-	github.com/docker/secrets-engine/plugin v0.3.4
+	github.com/docker/secrets-engine/client v1.0.0
+	github.com/docker/secrets-engine/plugin v0.4.0
 	github.com/docker/secrets-engine/plugins/credentialhelper v0.0.9
 	github.com/docker/secrets-engine/plugins/pass v0.4.4
 	github.com/docker/secrets-engine/store v0.4.4
@@ -25,6 +25,7 @@ require (
 	github.com/containerd/log v0.2.0 // indirect
 	github.com/containerd/ttrpc v1.2.10 // indirect
 	github.com/danieljoos/wincred v1.2.3 // indirect
+	github.com/docker/secrets-engine/secrets v1.0.0 // indirect
 	github.com/godbus/dbus/v5 v5.2.4 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
